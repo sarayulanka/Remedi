@@ -548,7 +548,10 @@ const HealthScreen = () => {
     <LinearGradient colors={gradients.main} style={styles.container}>
       <ScrollView
         style={styles.scrollView}
+        contentContainerStyle={styles.scrollViewContent}
         showsVerticalScrollIndicator={false}
+        bounces={true}
+        alwaysBounceVertical={true}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -891,7 +894,6 @@ const HealthScreen = () => {
           </View>
         )}
 
-        <View style={styles.bottomSpacer} />
       </ScrollView>
 
       {/* Nutrient Explanation Modal */}
@@ -909,6 +911,10 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    paddingBottom: Platform.OS === 'ios' ? 120 : 100,
   },
   header: {
     paddingHorizontal: spacing['2xl'],
@@ -1390,9 +1396,6 @@ const styles = StyleSheet.create({
     fontSize: typography.base,
     fontWeight: '600',
     color: colors.text,
-  },
-  bottomSpacer: {
-    height: spacing['2xl'],
   },
   // Nutrient hint
   nutrientHint: {

@@ -272,7 +272,10 @@ const ProfileScreen = ({ onLogout }) => {
     <LinearGradient colors={gradients.main} style={styles.container}>
       <ScrollView
         style={styles.scrollView}
+        contentContainerStyle={styles.scrollViewContent}
         showsVerticalScrollIndicator={false}
+        bounces={true}
+        alwaysBounceVertical={true}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -414,7 +417,6 @@ const ProfileScreen = ({ onLogout }) => {
           </LinearGradient>
         </TouchableOpacity>
 
-        <View style={styles.bottomSpacer} />
       </ScrollView>
 
       {/* Goals Modal */}
@@ -543,6 +545,10 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    paddingBottom: Platform.OS === 'ios' ? 120 : 100,
   },
   loadingContainer: {
     flex: 1,
@@ -724,9 +730,6 @@ const styles = StyleSheet.create({
     fontSize: typography.base,
     fontWeight: '700',
     color: colors.error,
-  },
-  bottomSpacer: {
-    height: spacing['5xl'],
   },
   // Modal styles
   modalOverlay: {

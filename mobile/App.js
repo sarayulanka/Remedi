@@ -11,7 +11,6 @@ import { Ionicons } from '@expo/vector-icons';
 import OnboardingScreen from './screens/OnboardingScreen';
 import AuthScreen from './screens/AuthScreen';
 import HomeScreen from './screens/HomeScreen';
-import LocationsScreen from './screens/LocationsScreen';
 import HealthScreen from './screens/HealthScreen';
 import GoalsScreen from './screens/GoalsScreen';
 import StoryOnboardingScreen from './screens/StoryOnboardingScreen';
@@ -48,7 +47,6 @@ const TabIcon = ({ icon, label, focused, color }) => (
 // Tab bar icon configurations
 const TAB_ICONS = {
   Home: { active: 'home', inactive: 'home-outline' },
-  Locations: { active: 'location', inactive: 'location-outline' },
   Health: { active: 'heart', inactive: 'heart-outline' },
   Goals: { active: 'trophy', inactive: 'trophy-outline' },
   Profile: { active: 'person', inactive: 'person-outline' },
@@ -141,7 +139,7 @@ function MainTabs({ navigation }) {
         },
         tabBarItemStyle: {
           paddingVertical: 6,
-          minWidth: screenWidth / 5 - 8,
+          minWidth: screenWidth / 4 - 8,
         },
         tabBarIcon: ({ focused, color }) => {
           const icons = TAB_ICONS[route.name];
@@ -162,13 +160,6 @@ function MainTabs({ navigation }) {
         component={HomeScreen}
         options={{
           tabBarLabel: 'Home',
-        }}
-      />
-      <Tab.Screen
-        name="Locations"
-        component={LocationsScreen}
-        options={{
-          tabBarLabel: 'Find Food',
         }}
       />
       <Tab.Screen

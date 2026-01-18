@@ -69,14 +69,6 @@ const HomeScreen = ({ navigation }) => {
 
   const features = [
     {
-      title: 'Find Food Locations',
-      description: 'Discover nearby shelters, kitchens, and food banks',
-      icon: 'location-outline',
-      iconColor: '#3b82f6',
-      gradient: ['#dbeafe', '#eff6ff'],
-      onPress: () => navigation.navigate('Locations'),
-    },
-    {
       title: 'Health Analysis',
       description: 'Get natural food remedies for health concerns',
       icon: 'search-outline',
@@ -98,7 +90,10 @@ const HomeScreen = ({ navigation }) => {
     <LinearGradient colors={gradients.main} style={styles.container}>
       <ScrollView
         style={styles.scrollView}
+        contentContainerStyle={styles.scrollViewContent}
         showsVerticalScrollIndicator={false}
+        bounces={true}
+        alwaysBounceVertical={true}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primaryDark} />
         }
@@ -213,7 +208,6 @@ const HomeScreen = ({ navigation }) => {
           ))}
         </View>
 
-        <View style={styles.bottomSpacer} />
       </ScrollView>
     </LinearGradient>
   );
@@ -225,6 +219,10 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    paddingBottom: Platform.OS === 'ios' ? 120 : 100,
   },
   header: {
     paddingHorizontal: spacing['2xl'],
@@ -400,9 +398,6 @@ const styles = StyleSheet.create({
     fontSize: typography.sm,
     color: colors.textLight,
     lineHeight: typography.sm * 1.4,
-  },
-  bottomSpacer: {
-    height: spacing['2xl'],
   },
 });
 

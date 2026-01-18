@@ -209,7 +209,10 @@ const GoalsScreen = () => {
     <LinearGradient colors={gradients.main} style={styles.container}>
       <ScrollView
         style={styles.scrollView}
+        contentContainerStyle={styles.scrollViewContent}
         showsVerticalScrollIndicator={false}
+        bounces={true}
+        alwaysBounceVertical={true}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -447,7 +450,6 @@ const GoalsScreen = () => {
           </ScrollView>
         </View>
 
-        <View style={styles.bottomSpacer} />
       </ScrollView>
 
       {/* Template Selection Modal */}
@@ -599,6 +601,10 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    paddingBottom: Platform.OS === 'ios' ? 120 : 100,
   },
   header: {
     paddingHorizontal: spacing['2xl'],
@@ -895,9 +901,6 @@ const styles = StyleSheet.create({
     color: colors.textLight,
     textAlign: 'center',
     lineHeight: typography.base * 1.5,
-  },
-  bottomSpacer: {
-    height: spacing['2xl'],
   },
   // Modal styles
   modalOverlay: {
