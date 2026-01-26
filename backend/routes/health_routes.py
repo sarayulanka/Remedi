@@ -17,7 +17,9 @@ async def analyze_health_concern(
         user_id=current_user["userId"],
         image_base64=request.imageBase64,
         text_description=request.textDescription,
-        user_concerns=request.userConcerns
+        user_concerns=request.userConcerns,
+        allergies=request.allergies or [],
+        diet_type=request.dietType
     )
 
 @router.post("/save-remedy")

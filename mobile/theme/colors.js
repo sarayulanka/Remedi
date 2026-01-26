@@ -1,11 +1,11 @@
 // Premium Color Palette - Green & White Focus
 export const colors = {
-  // Primary Green Palette - keeping your original green but enhanced
-  primary: '#bdf0cb',           // Your signature light green
-  primaryLight: '#e8f8eb',      // Very light mint
-  primaryDark: '#8fd9a3',       // Your darker green
-  primaryDeep: '#5fb87f',       // Even deeper green
-  primaryRich: '#3d9970',       // Rich emerald
+  // Primary Green Palette - slightly darker for better white text readability
+  primary: '#9ae3b3',           // Signature green (slightly darker for readability)
+  primaryLight: '#d4f0dc',      // Light mint (slightly darker)
+  primaryDark: '#6dc990',       // Darker green (slightly darker)
+  primaryDeep: '#4faa6f',       // Deep green (slightly darker)
+  primaryRich: '#2d8a5e',       // Rich emerald (slightly darker)
   
   // Whites & Backgrounds
   white: '#ffffff',
@@ -36,23 +36,39 @@ export const colors = {
   errorLight: '#fee2e2',
   info: '#3b82f6',
   infoLight: '#dbeafe',
+
+  // Achievement Colors - Gold accent palette
+  gold: '#F59E0B',
+  goldLight: '#FCD34D',
+  goldDark: '#D97706',
+  goldBg: '#FEF3C7',
+
+  // Streak flame colors
+  flame: '#f97316',
+  flameLight: '#fdba74',
+  flameBg: '#fff7ed',
+
+  // Freeze/shield colors
+  freeze: '#3B82F6',
+  freezeLight: '#93C5FD',
+  freezeBg: '#DBEAFE',
   
   // Shadows & Effects
   shadow: 'rgba(0, 0, 0, 0.06)',
   shadowMedium: 'rgba(0, 0, 0, 0.1)',
   shadowHeavy: 'rgba(0, 0, 0, 0.15)',
-  glow: 'rgba(143, 217, 163, 0.3)',
+  glow: 'rgba(109, 201, 144, 0.3)',
 };
 
 // Premium Gradients
 export const gradients = {
   // Main backgrounds
-  main: ['#e8f8eb', '#f8fff9', '#ffffff'],
-  mainReverse: ['#ffffff', '#f8fff9', '#e8f8eb'],
-  
-  // Buttons - your signature green
-  button: ['#8fd9a3', '#bdf0cb'],
-  buttonHover: ['#5fb87f', '#8fd9a3'],
+  main: ['#d4f0dc', '#f0faf2', '#ffffff'],
+  mainReverse: ['#ffffff', '#f0faf2', '#d4f0dc'],
+
+  // Buttons - slightly darker for better white text readability
+  button: ['#6dc990', '#9ae3b3'],
+  buttonHover: ['#4faa6f', '#6dc990'],
   
   // Cards
   card: ['#ffffff', '#f8fff9'],
@@ -105,7 +121,7 @@ export const shadows = {
     elevation: 12,
   },
   glow: {
-    shadowColor: '#8fd9a3',
+    shadowColor: '#6dc990',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.4,
     shadowRadius: 12,

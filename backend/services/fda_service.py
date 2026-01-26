@@ -777,6 +777,142 @@ class FDAService:
                 },
                 'foods': ['leafy greens', 'lean meat', 'dairy', 'fatty fish', 'eggs'],
                 'sources': ['American College of Obstetricians and Gynecologists', 'NIH Office of Dietary Supplements']
+            },
+
+            # Thyroid Health
+            'thyroid_health': {
+                'nutrients': ['Iodine', 'Selenium', 'Zinc', 'Iron', 'Vitamin D'],
+                'nutrient_explanations': {
+                    'Iodine': 'Essential for thyroid hormone production (T3 and T4). FDA recommends 150mcg daily. Deficiency causes goiter and hypothyroidism.',
+                    'Selenium': 'Required for conversion of T4 to active T3 hormone. Protects thyroid from oxidative damage. Brazil nuts are richest source.',
+                    'Zinc': 'Necessary for thyroid hormone synthesis and metabolism. Deficiency impairs thyroid function.',
+                    'Iron': 'Required for thyroid peroxidase enzyme that produces thyroid hormones. Iron deficiency reduces thyroid function.',
+                    'Vitamin D': 'Low vitamin D associated with autoimmune thyroid conditions. Supports immune regulation.'
+                },
+                'foods': ['seaweed', 'seafood', 'brazil nuts', 'eggs', 'dairy'],
+                'sources': ['NIH Office of Dietary Supplements', 'American Thyroid Association']
+            },
+            'hypothyroid': {
+                'nutrients': ['Iodine', 'Selenium', 'Zinc', 'Vitamin B12', 'Iron'],
+                'nutrient_explanations': {
+                    'Iodine': 'Building block of thyroid hormones. Without adequate iodine, thyroid cannot produce T3 and T4.',
+                    'Selenium': 'Activates thyroid hormones. Studies show selenium improves symptoms in autoimmune thyroiditis.',
+                    'Zinc': 'Supports conversion of T4 to T3. Low zinc reduces thyroid hormone levels.',
+                    'Vitamin B12': 'Often deficient in hypothyroid patients. Supports energy metabolism impaired by low thyroid.',
+                    'Iron': 'Thyroid function depends on iron. Hypothyroidism and iron deficiency often occur together.'
+                },
+                'foods': ['iodized salt', 'cod', 'shrimp', 'brazil nuts', 'beef liver'],
+                'sources': ['NIH Office of Dietary Supplements', 'American Thyroid Association']
+            },
+
+            # Nerve Health
+            'nerve_health': {
+                'nutrients': ['Vitamin B1', 'Vitamin B6', 'Vitamin B12', 'Copper', 'Vitamin E'],
+                'nutrient_explanations': {
+                    'Vitamin B1': 'Thiamin is essential for nerve signal transmission. Deficiency causes peripheral neuropathy and beriberi.',
+                    'Vitamin B6': 'Required for neurotransmitter synthesis including serotonin and dopamine. Deficiency causes numbness and tingling.',
+                    'Vitamin B12': 'Maintains myelin sheath protecting nerves. Deficiency causes irreversible nerve damage if untreated.',
+                    'Copper': 'Essential for myelin formation and nerve conduction. Deficiency causes myelopathy and neuropathy.',
+                    'Vitamin E': 'Antioxidant that protects nerve cell membranes. Deficiency causes neurological problems.'
+                },
+                'foods': ['pork', 'sunflower seeds', 'fortified cereals', 'shellfish', 'nuts'],
+                'sources': ['NIH Office of Dietary Supplements', 'National Institute of Neurological Disorders']
+            },
+            'neuropathy': {
+                'nutrients': ['Vitamin B12', 'Vitamin B1', 'Vitamin B6', 'Alpha-Lipoic Acid', 'Vitamin D'],
+                'nutrient_explanations': {
+                    'Vitamin B12': 'Most common nutritional cause of neuropathy. Essential for nerve myelin maintenance.',
+                    'Vitamin B1': 'Thiamin deficiency causes alcoholic and diabetic neuropathy. Critical for nerve energy metabolism.',
+                    'Vitamin B6': 'Supports nerve function but excess can also cause neuropathy. Balance is key.',
+                    'Alpha-Lipoic Acid': 'Antioxidant shown to reduce diabetic neuropathy symptoms in clinical trials.',
+                    'Vitamin D': 'Low levels associated with peripheral neuropathy. Supports nerve repair.'
+                },
+                'foods': ['fortified cereals', 'beef', 'pork', 'spinach', 'fatty fish'],
+                'sources': ['NIH Office of Dietary Supplements', 'American Diabetes Association']
+            },
+
+            # Anemia
+            'anemia': {
+                'nutrients': ['Iron', 'Vitamin B12', 'Folate', 'Vitamin C', 'Copper'],
+                'nutrient_explanations': {
+                    'Iron': 'Most common cause of anemia worldwide. Required for hemoglobin production. FDA DV is 18mg.',
+                    'Vitamin B12': 'Deficiency causes megaloblastic anemia with large, immature red blood cells.',
+                    'Folate': 'Works with B12 for red blood cell formation. Deficiency causes similar anemia to B12.',
+                    'Vitamin C': 'Dramatically increases iron absorption from plant sources. Take with iron-rich foods.',
+                    'Copper': 'Required for iron transport and red blood cell formation. Deficiency causes anemia even with adequate iron.'
+                },
+                'foods': ['red meat', 'liver', 'fortified cereals', 'citrus fruits', 'shellfish'],
+                'sources': ['NIH Office of Dietary Supplements', 'FDA FoodData Central']
+            },
+
+            # Muscle Cramps
+            'muscle_cramps': {
+                'nutrients': ['Magnesium', 'Potassium', 'Calcium', 'Sodium', 'Vitamin D'],
+                'nutrient_explanations': {
+                    'Magnesium': 'Regulates muscle contraction and relaxation. Deficiency is a leading cause of cramps.',
+                    'Potassium': 'Essential for muscle cell electrical activity. Low potassium causes muscle weakness and cramps.',
+                    'Calcium': 'Required for muscle contraction signal. Imbalance causes tetany and cramping.',
+                    'Sodium': 'Electrolyte lost in sweat. Exercise-related cramps often due to sodium depletion.',
+                    'Vitamin D': 'Supports calcium absorption and muscle function. Deficiency causes muscle weakness.'
+                },
+                'foods': ['bananas', 'spinach', 'dairy', 'coconut water', 'fortified milk'],
+                'sources': ['NIH Office of Dietary Supplements', 'American College of Sports Medicine']
+            },
+
+            # Cognitive Health
+            'memory': {
+                'nutrients': ['Omega-3 DHA', 'Vitamin B12', 'Vitamin E', 'Choline', 'Vitamin D'],
+                'nutrient_explanations': {
+                    'Omega-3 DHA': 'Makes up 40% of brain fatty acids. Essential for memory and cognitive function.',
+                    'Vitamin B12': 'Deficiency causes memory problems and cognitive decline. Critical for brain health.',
+                    'Vitamin E': 'Antioxidant that protects brain cells from oxidative damage associated with aging.',
+                    'Choline': 'Precursor to acetylcholine neurotransmitter critical for memory. FDA established DV in 2016.',
+                    'Vitamin D': 'Receptors throughout brain. Low levels linked to cognitive decline and dementia risk.'
+                },
+                'foods': ['fatty fish', 'eggs', 'nuts', 'liver', 'fortified milk'],
+                'sources': ['NIH Office of Dietary Supplements', 'Alzheimers Association']
+            },
+
+            # Skin and Connective Tissue
+            'collagen_support': {
+                'nutrients': ['Vitamin C', 'Copper', 'Manganese', 'Zinc', 'Protein'],
+                'nutrient_explanations': {
+                    'Vitamin C': 'Absolutely required for collagen synthesis. Without it, collagen cannot form properly.',
+                    'Copper': 'Essential cofactor for lysyl oxidase enzyme that cross-links collagen fibers for strength.',
+                    'Manganese': 'Required for procollagen formation. Supports cartilage and bone collagen.',
+                    'Zinc': 'Necessary for collagen synthesis enzymes. Supports wound healing and skin integrity.',
+                    'Protein': 'Provides amino acids glycine, proline, and hydroxyproline that make up collagen structure.'
+                },
+                'foods': ['citrus fruits', 'shellfish', 'nuts', 'bone broth', 'lean meat'],
+                'sources': ['NIH Office of Dietary Supplements', 'FDA FoodData Central']
+            },
+
+            # Energy Metabolism
+            'energy_metabolism': {
+                'nutrients': ['Vitamin B1', 'Vitamin B2', 'Vitamin B3', 'Vitamin B5', 'Iron'],
+                'nutrient_explanations': {
+                    'Vitamin B1': 'Thiamin converts carbohydrates to energy. Essential for cellular energy production.',
+                    'Vitamin B2': 'Riboflavin is coenzyme in energy metabolism. Required for FAD production.',
+                    'Vitamin B3': 'Niacin forms NAD essential for cellular energy. Deficiency causes pellagra.',
+                    'Vitamin B5': 'Pantothenic acid forms Coenzyme A, central to energy metabolism. Found in almost all foods.',
+                    'Iron': 'Carries oxygen to cells for energy production. Deficiency causes fatigue.'
+                },
+                'foods': ['whole grains', 'pork', 'fortified cereals', 'mushrooms', 'lean meat'],
+                'sources': ['NIH Office of Dietary Supplements', 'FDA FoodData Central']
+            },
+
+            # Antioxidant Support
+            'antioxidant_support': {
+                'nutrients': ['Vitamin C', 'Vitamin E', 'Selenium', 'Manganese', 'Zinc'],
+                'nutrient_explanations': {
+                    'Vitamin C': 'Water-soluble antioxidant that neutralizes free radicals. Regenerates vitamin E.',
+                    'Vitamin E': 'Fat-soluble antioxidant protecting cell membranes. Works with selenium.',
+                    'Selenium': 'Component of glutathione peroxidase, a major antioxidant enzyme system.',
+                    'Manganese': 'Required for superoxide dismutase (SOD), key mitochondrial antioxidant enzyme.',
+                    'Zinc': 'Component of SOD enzyme. Supports overall antioxidant defense system.'
+                },
+                'foods': ['berries', 'nuts', 'brazil nuts', 'whole grains', 'shellfish'],
+                'sources': ['NIH Office of Dietary Supplements', 'FDA FoodData Central']
             }
         }
 
@@ -796,7 +932,7 @@ class FDAService:
         keyword_map = {
             'skin': 'skin_inflammation',
             'tired': 'fatigue',
-            'energy': 'low_energy',
+            'energy': 'energy_metabolism',
             'sleep': 'insomnia',
             'stomach': 'digestive_issues',
             'gut': 'digestive_issues',
@@ -815,7 +951,20 @@ class FDAService:
             'liver': 'liver_health',
             'head': 'headache',
             'teeth': 'dental_health',
-            'pregnant': 'pregnancy_nutrition'
+            'pregnant': 'pregnancy_nutrition',
+            'thyroid': 'thyroid_health',
+            'iodine': 'thyroid_health',
+            'nerve': 'nerve_health',
+            'numbness': 'neuropathy',
+            'tingling': 'neuropathy',
+            'anemia': 'anemia',
+            'iron': 'anemia',
+            'cramp': 'muscle_cramps',
+            'memory': 'memory',
+            'cognitive': 'memory',
+            'collagen': 'collagen_support',
+            'antioxidant': 'antioxidant_support',
+            'metabolism': 'energy_metabolism'
         }
 
         for keyword, condition_key in keyword_map.items():
@@ -824,693 +973,3 @@ class FDAService:
 
         # Default to general inflammation
         return recommendations['general_inflammation']
-
-
-class SpoonacularService:
-    """Service for getting recipes with photos from Spoonacular API"""
-
-    def __init__(self):
-        # Spoonacular API key - free tier allows 150 requests/day
-        self.api_key = os.getenv('SPOONACULAR_API_KEY', '')
-        self.base_url = "https://api.spoonacular.com"
-
-    def search_recipes_by_nutrients(
-        self,
-        nutrients: List[str],
-        dietary_restrictions: Optional[List[str]] = None,
-        limit: int = 5
-    ) -> List[Dict]:
-        """Search for recipes that are high in specific nutrients"""
-        if not self.api_key:
-            return self._get_fallback_recipes(nutrients)
-
-        try:
-            # Build search query from nutrients
-            query = ' '.join(nutrients[:3])  # Use top 3 nutrients
-
-            params = {
-                'apiKey': self.api_key,
-                'query': query,
-                'number': limit,
-                'addRecipeNutrition': True,
-                'instructionsRequired': True,
-                'fillIngredients': True
-            }
-
-            # Add dietary restrictions
-            if dietary_restrictions:
-                diet_map = {
-                    'vegetarian': 'vegetarian',
-                    'vegan': 'vegan',
-                    'gluten_free': 'gluten free',
-                    'dairy_free': 'dairy free',
-                    'keto': 'ketogenic',
-                    'paleo': 'paleo'
-                }
-                diets = [diet_map.get(d, d) for d in dietary_restrictions if d in diet_map]
-                if diets:
-                    params['diet'] = ','.join(diets)
-
-            response = requests.get(
-                f"{self.base_url}/recipes/complexSearch",
-                params=params,
-                timeout=15
-            )
-            response.raise_for_status()
-            data = response.json()
-
-            recipes = []
-            for result in data.get('results', []):
-                recipe = {
-                    'id': result.get('id'),
-                    'title': result.get('title'),
-                    'image': result.get('image'),
-                    'imageType': result.get('imageType', 'jpg'),
-                    'readyInMinutes': result.get('readyInMinutes'),
-                    'servings': result.get('servings'),
-                    'sourceUrl': f"https://spoonacular.com/recipes/{result.get('title', '').replace(' ', '-').lower()}-{result.get('id')}",
-                    'summary': result.get('summary', ''),
-                    'healthScore': result.get('healthScore', 0),
-                    'source': 'Spoonacular Recipe Database'
-                }
-
-                # Extract nutrition info if available
-                if 'nutrition' in result:
-                    nutrients_data = result['nutrition'].get('nutrients', [])
-                    recipe['nutrients'] = [
-                        {
-                            'name': n.get('name'),
-                            'amount': n.get('amount'),
-                            'unit': n.get('unit')
-                        }
-                        for n in nutrients_data[:5]
-                    ]
-
-                recipes.append(recipe)
-
-            return recipes
-
-        except Exception as e:
-            print(f"Error fetching recipes from Spoonacular: {str(e)}")
-            return self._get_fallback_recipes(nutrients)
-
-    def search_recipes_by_foods(
-        self,
-        foods: List[str],
-        nutrients: List[str],
-        dietary_restrictions: Optional[List[str]] = None,
-        limit: int = 5
-    ) -> List[Dict]:
-        """Search for recipes that use the recommended foods - more targeted than nutrient search"""
-        if not self.api_key:
-            return self._get_fallback_recipes_by_foods(foods, nutrients)
-
-        try:
-            all_recipes = []
-            seen_ids = set()
-
-            # Search for recipes using each recommended food
-            for food in foods[:3]:  # Use top 3 recommended foods
-                params = {
-                    'apiKey': self.api_key,
-                    'query': food,
-                    'number': 3,  # Get 3 recipes per food
-                    'addRecipeNutrition': True,
-                    'instructionsRequired': True,
-                    'fillIngredients': True,
-                    'addRecipeInstructions': True
-                }
-
-                # Add dietary restrictions
-                if dietary_restrictions:
-                    diet_map = {
-                        'vegetarian': 'vegetarian',
-                        'vegan': 'vegan',
-                        'gluten_free': 'gluten free',
-                        'dairy_free': 'dairy free',
-                        'keto': 'ketogenic',
-                        'paleo': 'paleo'
-                    }
-                    diets = [diet_map.get(d, d) for d in dietary_restrictions if d in diet_map]
-                    if diets:
-                        params['diet'] = ','.join(diets)
-
-                response = requests.get(
-                    f"{self.base_url}/recipes/complexSearch",
-                    params=params,
-                    timeout=15
-                )
-                response.raise_for_status()
-                data = response.json()
-
-                for result in data.get('results', []):
-                    recipe_id = result.get('id')
-                    if recipe_id in seen_ids:
-                        continue
-                    seen_ids.add(recipe_id)
-
-                    # Extract instructions from analyzedInstructions
-                    instructions = ""
-                    analyzed = result.get('analyzedInstructions', [])
-                    if analyzed and len(analyzed) > 0:
-                        steps = analyzed[0].get('steps', [])
-                        instructions = "\n".join([f"{s.get('number', i+1)}. {s.get('step', '')}" for i, s in enumerate(steps)])
-
-                    recipe = {
-                        'id': recipe_id,
-                        'title': result.get('title'),
-                        'image': result.get('image'),
-                        'imageType': result.get('imageType', 'jpg'),
-                        'readyInMinutes': result.get('readyInMinutes'),
-                        'servings': result.get('servings'),
-                        'sourceUrl': result.get('sourceUrl') or f"https://spoonacular.com/recipes/{result.get('title', '').replace(' ', '-').lower()}-{recipe_id}",
-                        'summary': result.get('summary', ''),
-                        'instructions': instructions,
-                        'healthScore': result.get('healthScore', 0),
-                        'keyIngredient': food,  # Track which recommended food this recipe uses
-                        'source': 'Spoonacular Recipe Database'
-                    }
-
-                    # Extract nutrition info if available
-                    if 'nutrition' in result:
-                        nutrients_data = result['nutrition'].get('nutrients', [])
-                        recipe['nutrients'] = [
-                            {
-                                'name': n.get('name'),
-                                'amount': n.get('amount'),
-                                'unit': n.get('unit')
-                            }
-                            for n in nutrients_data[:5]
-                        ]
-
-                    all_recipes.append(recipe)
-
-            # Return unique recipes, prioritizing variety
-            return all_recipes[:limit]
-
-        except Exception as e:
-            print(f"Error fetching recipes from Spoonacular: {str(e)}")
-            return self._get_fallback_recipes_by_foods(foods, nutrients)
-
-    def _get_fallback_recipes_by_foods(self, foods: List[str], nutrients: List[str]) -> List[Dict]:
-        """Provide fallback recipes when API is unavailable, matched to recommended foods"""
-        # Comprehensive food-to-recipe mapping
-        food_recipes = {
-            'salmon': {
-                'title': 'Herb-Crusted Baked Salmon',
-                'image': 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400',
-                'readyInMinutes': 25,
-                'servings': 4,
-                'description': 'Wild-caught salmon baked with fresh dill, lemon, and garlic.',
-                'instructions': '1. Preheat oven to 400°F (200°C).\n2. Place salmon fillets on a lined baking sheet.\n3. Mix olive oil, minced garlic, fresh dill, salt, and pepper.\n4. Brush the herb mixture over the salmon.\n5. Top with lemon slices.\n6. Bake for 15-20 minutes until salmon flakes easily.\n7. Serve with your choice of vegetables.',
-                'keyIngredient': 'salmon',
-                'source': 'Remedi Kitchen - FDA Nutrition Guidelines'
-            },
-            'spinach': {
-                'title': 'Garlic Sautéed Spinach with Pine Nuts',
-                'image': 'https://images.unsplash.com/photo-1574316071802-0d684efa7bf5?w=400',
-                'readyInMinutes': 10,
-                'servings': 2,
-                'description': 'Quick and nutritious spinach sautéed with garlic and topped with toasted pine nuts.',
-                'instructions': '1. Toast pine nuts in a dry pan until golden, set aside.\n2. Heat olive oil in a large pan over medium heat.\n3. Add minced garlic and sauté for 30 seconds.\n4. Add fresh spinach and toss until just wilted.\n5. Season with salt, pepper, and a squeeze of lemon.\n6. Top with toasted pine nuts and serve.',
-                'keyIngredient': 'spinach',
-                'source': 'Remedi Kitchen - FDA Nutrition Guidelines'
-            },
-            'eggs': {
-                'title': 'Vegetable Frittata',
-                'image': 'https://images.unsplash.com/photo-1510693206972-df098062cb71?w=400',
-                'readyInMinutes': 30,
-                'servings': 4,
-                'description': 'Protein-packed frittata loaded with colorful vegetables.',
-                'instructions': '1. Preheat oven to 375°F (190°C).\n2. Whisk 8 eggs with salt, pepper, and a splash of milk.\n3. Sauté diced vegetables (bell peppers, onions, spinach) in an oven-safe pan.\n4. Pour egg mixture over vegetables.\n5. Cook on stovetop until edges set (3-4 minutes).\n6. Transfer to oven and bake 15-20 minutes until set.\n7. Let cool 5 minutes before slicing.',
-                'keyIngredient': 'eggs',
-                'source': 'Remedi Kitchen - FDA Nutrition Guidelines'
-            },
-            'yogurt': {
-                'title': 'Probiotic Power Parfait',
-                'image': 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400',
-                'readyInMinutes': 5,
-                'servings': 1,
-                'description': 'Layered Greek yogurt with fresh berries, granola, and honey.',
-                'instructions': '1. Add a layer of Greek yogurt to the bottom of a glass or bowl.\n2. Add a layer of fresh mixed berries.\n3. Sprinkle with granola.\n4. Repeat layers.\n5. Drizzle with honey.\n6. Top with a few extra berries and serve immediately.',
-                'keyIngredient': 'yogurt',
-                'source': 'Remedi Kitchen - FDA Nutrition Guidelines'
-            },
-            'sweet potato': {
-                'title': 'Roasted Sweet Potato Bowl',
-                'image': 'https://images.unsplash.com/photo-1596097635121-14b63b7a0c19?w=400',
-                'readyInMinutes': 45,
-                'servings': 2,
-                'description': 'Caramelized roasted sweet potatoes with tahini and herbs.',
-                'instructions': '1. Preheat oven to 425°F (220°C).\n2. Cube sweet potatoes and toss with olive oil, salt, and cumin.\n3. Spread on baking sheet in single layer.\n4. Roast 35-40 minutes, flipping halfway.\n5. Prepare tahini sauce: mix tahini, lemon juice, garlic, and water.\n6. Serve sweet potatoes drizzled with tahini and fresh parsley.',
-                'keyIngredient': 'sweet potato',
-                'source': 'Remedi Kitchen - FDA Nutrition Guidelines'
-            },
-            'avocado': {
-                'title': 'Avocado Toast with Everything Seasoning',
-                'image': 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?w=400',
-                'readyInMinutes': 10,
-                'servings': 2,
-                'description': 'Creamy avocado on whole grain toast with everything bagel seasoning.',
-                'instructions': '1. Toast whole grain bread until golden.\n2. Cut avocado in half and remove pit.\n3. Scoop avocado onto toast and mash with a fork.\n4. Season with salt, pepper, and squeeze of lime.\n5. Sprinkle generously with everything bagel seasoning.\n6. Optional: top with cherry tomatoes or a poached egg.',
-                'keyIngredient': 'avocado',
-                'source': 'Remedi Kitchen - FDA Nutrition Guidelines'
-            },
-            'almonds': {
-                'title': 'Almond-Crusted Chicken',
-                'image': 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=400',
-                'readyInMinutes': 35,
-                'servings': 4,
-                'description': 'Tender chicken breasts with a crunchy almond coating.',
-                'instructions': '1. Preheat oven to 400°F (200°C).\n2. Pulse almonds in food processor until finely ground.\n3. Mix ground almonds with herbs, salt, and pepper.\n4. Dip chicken in beaten egg, then coat in almond mixture.\n5. Place on lined baking sheet.\n6. Bake 25-30 minutes until internal temp reaches 165°F.\n7. Let rest 5 minutes before serving.',
-                'keyIngredient': 'almonds',
-                'source': 'Remedi Kitchen - FDA Nutrition Guidelines'
-            },
-            'berries': {
-                'title': 'Antioxidant Berry Smoothie Bowl',
-                'image': 'https://images.unsplash.com/photo-1590301157890-4810ed352733?w=400',
-                'readyInMinutes': 10,
-                'servings': 1,
-                'description': 'Thick and creamy smoothie bowl packed with antioxidant-rich berries.',
-                'instructions': '1. Blend frozen mixed berries with a splash of almond milk.\n2. Add half a frozen banana for creaminess.\n3. Blend until thick (should be thicker than a smoothie).\n4. Pour into a bowl.\n5. Top with fresh berries, sliced banana, and granola.\n6. Add chia seeds and a drizzle of honey.',
-                'keyIngredient': 'berries',
-                'source': 'Remedi Kitchen - FDA Nutrition Guidelines'
-            },
-            'ginger': {
-                'title': 'Ginger-Turmeric Healing Soup',
-                'image': 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400',
-                'readyInMinutes': 30,
-                'servings': 4,
-                'description': 'Warming anti-inflammatory soup with fresh ginger and turmeric.',
-                'instructions': '1. Sauté diced onion in olive oil until soft.\n2. Add 2 tbsp fresh grated ginger and 1 tsp turmeric.\n3. Add vegetable broth and bring to boil.\n4. Add chopped carrots and simmer 15 minutes.\n5. Add coconut milk and simmer 5 more minutes.\n6. Season with salt, pepper, and lime juice.\n7. Garnish with fresh cilantro.',
-                'keyIngredient': 'ginger',
-                'source': 'Remedi Kitchen - FDA Nutrition Guidelines'
-            },
-            'turmeric': {
-                'title': 'Golden Milk Latte',
-                'image': 'https://images.unsplash.com/photo-1578020190125-f4f7c18bc9cb?w=400',
-                'readyInMinutes': 10,
-                'servings': 2,
-                'description': 'Warming anti-inflammatory beverage with turmeric and spices.',
-                'instructions': '1. Heat 2 cups milk (dairy or plant-based) in a saucepan.\n2. Whisk in 1 tsp turmeric, 1/2 tsp cinnamon, 1/4 tsp ginger.\n3. Add a pinch of black pepper (helps absorption).\n4. Simmer for 5 minutes, stirring frequently.\n5. Sweeten with honey or maple syrup to taste.\n6. Strain if desired and serve warm.',
-                'keyIngredient': 'turmeric',
-                'source': 'Remedi Kitchen - FDA Nutrition Guidelines'
-            },
-            'oats': {
-                'title': 'Overnight Oats with Chia',
-                'image': 'https://images.unsplash.com/photo-1517673400267-0251440c45dc?w=400',
-                'readyInMinutes': 5,
-                'servings': 1,
-                'description': 'No-cook oatmeal prepared overnight for a quick nutritious breakfast.',
-                'instructions': '1. Combine 1/2 cup oats with 1/2 cup milk in a jar.\n2. Add 1 tbsp chia seeds and 1 tbsp maple syrup.\n3. Add a pinch of cinnamon.\n4. Stir well and refrigerate overnight.\n5. In the morning, stir and add more milk if needed.\n6. Top with fresh fruit, nuts, and a drizzle of nut butter.',
-                'keyIngredient': 'oats',
-                'source': 'Remedi Kitchen - FDA Nutrition Guidelines'
-            },
-            'beans': {
-                'title': 'Mediterranean White Bean Salad',
-                'image': 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
-                'readyInMinutes': 15,
-                'servings': 4,
-                'description': 'Protein-rich white bean salad with Mediterranean flavors.',
-                'instructions': '1. Drain and rinse two cans of white beans.\n2. Dice cucumber, tomatoes, and red onion.\n3. Combine beans and vegetables in a large bowl.\n4. Add olives and crumbled feta cheese.\n5. Whisk olive oil, lemon juice, oregano, salt, and pepper.\n6. Toss salad with dressing.\n7. Let marinate 10 minutes before serving.',
-                'keyIngredient': 'beans',
-                'source': 'Remedi Kitchen - FDA Nutrition Guidelines'
-            },
-            'dark chocolate': {
-                'title': 'Dark Chocolate Energy Bites',
-                'image': 'https://images.unsplash.com/photo-1553530666-ba11a90bb8b3?w=400',
-                'readyInMinutes': 15,
-                'servings': 12,
-                'description': 'No-bake energy bites with dark chocolate and oats.',
-                'instructions': '1. Mix 1 cup oats, 1/2 cup nut butter, and 1/3 cup honey.\n2. Add 1/2 cup dark chocolate chips.\n3. Stir in 2 tbsp chia seeds and 1 tsp vanilla.\n4. Refrigerate mixture for 30 minutes.\n5. Roll into 12 balls.\n6. Store in refrigerator for up to one week.',
-                'keyIngredient': 'dark chocolate',
-                'source': 'Remedi Kitchen - FDA Nutrition Guidelines'
-            },
-            'citrus': {
-                'title': 'Citrus Immunity Salad',
-                'image': 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=400',
-                'readyInMinutes': 15,
-                'servings': 2,
-                'description': 'Refreshing salad with oranges, grapefruit, and vitamin C-rich ingredients.',
-                'instructions': '1. Segment oranges and grapefruit over a bowl to catch juice.\n2. Arrange mixed greens on plates.\n3. Top with citrus segments and sliced avocado.\n4. Add pomegranate seeds and toasted almonds.\n5. Whisk olive oil with reserved citrus juice and honey.\n6. Drizzle dressing over salad and serve.',
-                'keyIngredient': 'citrus',
-                'source': 'Remedi Kitchen - FDA Nutrition Guidelines'
-            },
-            'leafy greens': {
-                'title': 'Power Greens Smoothie',
-                'image': 'https://images.unsplash.com/photo-1556881286-fc6915169721?w=400',
-                'readyInMinutes': 5,
-                'servings': 1,
-                'description': 'Nutrient-dense green smoothie with spinach, kale, and banana.',
-                'instructions': '1. Add 1 cup mixed leafy greens to blender.\n2. Add 1 frozen banana and 1/2 cup frozen mango.\n3. Pour in 1 cup almond milk.\n4. Add 1 tbsp almond butter for protein.\n5. Blend until smooth.\n6. Add more liquid if needed for desired consistency.',
-                'keyIngredient': 'leafy greens',
-                'source': 'Remedi Kitchen - FDA Nutrition Guidelines'
-            },
-            'walnuts': {
-                'title': 'Walnut-Crusted Fish',
-                'image': 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=400',
-                'readyInMinutes': 25,
-                'servings': 4,
-                'description': 'White fish with an omega-3 rich walnut crust.',
-                'instructions': '1. Preheat oven to 400°F (200°C).\n2. Pulse walnuts in food processor until finely chopped.\n3. Mix walnuts with breadcrumbs, parsley, and lemon zest.\n4. Season fish fillets with salt and pepper.\n5. Brush with Dijon mustard.\n6. Press walnut mixture onto fish.\n7. Bake 15-18 minutes until fish flakes easily.',
-                'keyIngredient': 'walnuts',
-                'source': 'Remedi Kitchen - FDA Nutrition Guidelines'
-            },
-            'banana': {
-                'title': 'Banana Oat Pancakes',
-                'image': 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400',
-                'readyInMinutes': 20,
-                'servings': 2,
-                'description': 'Healthy pancakes made with oats and ripe bananas.',
-                'instructions': '1. Blend 1 cup oats, 2 ripe bananas, 2 eggs, and 1/2 tsp cinnamon.\n2. Heat a non-stick pan over medium heat.\n3. Pour 1/4 cup batter per pancake.\n4. Cook until bubbles form, then flip.\n5. Cook another 2 minutes until golden.\n6. Serve with fresh fruit and a drizzle of maple syrup.',
-                'keyIngredient': 'banana',
-                'source': 'Remedi Kitchen - FDA Nutrition Guidelines'
-            },
-            'pumpkin seeds': {
-                'title': 'Pumpkin Seed Trail Mix',
-                'image': 'https://images.unsplash.com/photo-1604877934980-4a73e8e9c8c8?w=400',
-                'readyInMinutes': 5,
-                'servings': 8,
-                'description': 'Zinc-rich trail mix with pumpkin seeds and dried fruits.',
-                'instructions': '1. Combine 1 cup raw pumpkin seeds with 1/2 cup almonds.\n2. Add 1/2 cup dried cranberries and 1/4 cup dark chocolate chips.\n3. Add 1/4 cup coconut flakes.\n4. Toss with 1 tsp cinnamon and a pinch of sea salt.\n5. Store in an airtight container.\n6. Portion into small bags for grab-and-go snacks.',
-                'keyIngredient': 'pumpkin seeds',
-                'source': 'Remedi Kitchen - FDA Nutrition Guidelines'
-            },
-            'fatty fish': {
-                'title': 'Mediterranean Grilled Mackerel',
-                'image': 'https://images.unsplash.com/photo-1580476262798-bddd9f4b7369?w=400',
-                'readyInMinutes': 20,
-                'servings': 2,
-                'description': 'Omega-3 rich mackerel with Mediterranean herbs and lemon.',
-                'instructions': '1. Score mackerel fillets with diagonal cuts.\n2. Mix olive oil, lemon juice, garlic, and oregano.\n3. Rub mixture into fish, including cuts.\n4. Let marinate 10 minutes.\n5. Grill or broil 4-5 minutes per side.\n6. Serve with lemon wedges and fresh herbs.',
-                'keyIngredient': 'fatty fish',
-                'source': 'Remedi Kitchen - FDA Nutrition Guidelines'
-            },
-            'lean meat': {
-                'title': 'Herb-Marinated Grilled Chicken',
-                'image': 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=400',
-                'readyInMinutes': 40,
-                'servings': 4,
-                'description': 'Lean protein chicken with fresh herb marinade.',
-                'instructions': '1. Mix olive oil, lemon juice, garlic, rosemary, and thyme.\n2. Marinate chicken breasts for 30 minutes minimum.\n3. Preheat grill to medium-high heat.\n4. Grill chicken 6-7 minutes per side.\n5. Internal temperature should reach 165°F.\n6. Rest 5 minutes before slicing.',
-                'keyIngredient': 'lean meat',
-                'source': 'Remedi Kitchen - FDA Nutrition Guidelines'
-            },
-            'whole grains': {
-                'title': 'Quinoa Buddha Bowl',
-                'image': 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
-                'readyInMinutes': 30,
-                'servings': 2,
-                'description': 'Colorful bowl with quinoa and roasted vegetables.',
-                'instructions': '1. Cook 1 cup quinoa according to package directions.\n2. Roast chickpeas with cumin at 400°F for 20 minutes.\n3. Steam or roast mixed vegetables.\n4. Divide quinoa between bowls.\n5. Arrange vegetables and chickpeas on top.\n6. Drizzle with tahini dressing.\n7. Top with avocado and sesame seeds.',
-                'keyIngredient': 'whole grains',
-                'source': 'Remedi Kitchen - FDA Nutrition Guidelines'
-            },
-            'green tea': {
-                'title': 'Matcha Energy Balls',
-                'image': 'https://images.unsplash.com/photo-1556881286-fc6915169721?w=400',
-                'readyInMinutes': 15,
-                'servings': 10,
-                'description': 'No-bake energy balls with matcha green tea powder.',
-                'instructions': '1. Blend 1 cup cashews until fine.\n2. Add 1/4 cup coconut, 2 tbsp matcha powder, 2 tbsp honey.\n3. Blend until mixture comes together.\n4. Roll into 10 balls.\n5. Optional: roll in extra coconut or matcha.\n6. Refrigerate for 30 minutes before serving.',
-                'keyIngredient': 'green tea',
-                'source': 'Remedi Kitchen - FDA Nutrition Guidelines'
-            },
-            'prunes': {
-                'title': 'Fiber-Rich Prune Compote',
-                'image': 'https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?w=400',
-                'readyInMinutes': 20,
-                'servings': 4,
-                'description': 'Stewed prunes with warming spices for digestive health.',
-                'instructions': '1. Place 2 cups prunes in a saucepan.\n2. Cover with water and add orange zest.\n3. Add cinnamon stick and star anise.\n4. Simmer for 15 minutes until soft.\n5. Remove spices and let cool.\n6. Serve warm or cold over yogurt or oatmeal.',
-                'keyIngredient': 'prunes',
-                'source': 'Remedi Kitchen - FDA Nutrition Guidelines'
-            }
-        }
-
-        recipes = []
-        seen_titles = set()
-
-        # Match recipes to recommended foods
-        for food in foods:
-            food_lower = food.lower()
-            for key, recipe in food_recipes.items():
-                if key in food_lower or food_lower in key:
-                    if recipe['title'] not in seen_titles:
-                        recipes.append(recipe)
-                        seen_titles.add(recipe['title'])
-                        break
-
-        # If we didn't find enough, fall back to nutrient-based recipes
-        if len(recipes) < 3:
-            nutrient_recipes = self._get_fallback_recipes(nutrients)
-            for recipe in nutrient_recipes:
-                if recipe['title'] not in seen_titles:
-                    recipes.append(recipe)
-                    seen_titles.add(recipe['title'])
-
-        return recipes[:5]
-
-    def get_recipe_details(self, recipe_id: int) -> Optional[Dict]:
-        """Get detailed recipe information including instructions"""
-        if not self.api_key:
-            return None
-
-        try:
-            response = requests.get(
-                f"{self.base_url}/recipes/{recipe_id}/information",
-                params={
-                    'apiKey': self.api_key,
-                    'includeNutrition': True
-                },
-                timeout=15
-            )
-            response.raise_for_status()
-            data = response.json()
-
-            return {
-                'id': data.get('id'),
-                'title': data.get('title'),
-                'image': data.get('image'),
-                'readyInMinutes': data.get('readyInMinutes'),
-                'servings': data.get('servings'),
-                'sourceUrl': data.get('sourceUrl'),
-                'summary': data.get('summary'),
-                'instructions': data.get('instructions'),
-                'ingredients': [
-                    {
-                        'name': ing.get('name'),
-                        'amount': ing.get('amount'),
-                        'unit': ing.get('unit')
-                    }
-                    for ing in data.get('extendedIngredients', [])
-                ],
-                'source': 'Spoonacular Recipe Database'
-            }
-
-        except Exception as e:
-            print(f"Error fetching recipe details: {str(e)}")
-            return None
-
-    def _get_fallback_recipes(self, nutrients: List[str]) -> List[Dict]:
-        """Provide fallback recipes when API is unavailable"""
-        # Curated healthy recipes organized by beneficial nutrients
-        fallback_recipes = {
-            'Vitamin C': [
-                {
-                    'title': 'Citrus Berry Smoothie Bowl',
-                    'image': 'https://images.unsplash.com/photo-1590301157890-4810ed352733?w=400',
-                    'readyInMinutes': 10,
-                    'servings': 2,
-                    'description': 'Blend frozen berries, orange juice, and banana. Top with fresh citrus slices and chia seeds.',
-                    'source': 'Remedi Kitchen'
-                },
-                {
-                    'title': 'Roasted Bell Pepper Salad',
-                    'image': 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
-                    'readyInMinutes': 25,
-                    'servings': 4,
-                    'description': 'Colorful roasted peppers with olive oil, garlic, and fresh herbs.',
-                    'source': 'Remedi Kitchen'
-                }
-            ],
-            'Omega-3': [
-                {
-                    'title': 'Baked Salmon with Herbs',
-                    'image': 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400',
-                    'readyInMinutes': 30,
-                    'servings': 4,
-                    'description': 'Wild-caught salmon baked with lemon, dill, and garlic.',
-                    'source': 'Remedi Kitchen'
-                },
-                {
-                    'title': 'Walnut Crusted Fish',
-                    'image': 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=400',
-                    'readyInMinutes': 25,
-                    'servings': 4,
-                    'description': 'White fish coated with crushed walnuts and baked until crispy.',
-                    'source': 'Remedi Kitchen'
-                }
-            ],
-            'Zinc': [
-                {
-                    'title': 'Pumpkin Seed Power Bowl',
-                    'image': 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400',
-                    'readyInMinutes': 15,
-                    'servings': 2,
-                    'description': 'Quinoa bowl topped with roasted pumpkin seeds, chickpeas, and tahini.',
-                    'source': 'Remedi Kitchen'
-                },
-                {
-                    'title': 'Beef and Vegetable Stir Fry',
-                    'image': 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400',
-                    'readyInMinutes': 20,
-                    'servings': 4,
-                    'description': 'Lean beef strips with colorful vegetables in a light soy sauce.',
-                    'source': 'Remedi Kitchen'
-                }
-            ],
-            'Vitamin E': [
-                {
-                    'title': 'Almond Butter Toast with Avocado',
-                    'image': 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?w=400',
-                    'readyInMinutes': 5,
-                    'servings': 1,
-                    'description': 'Whole grain toast with almond butter and sliced avocado.',
-                    'source': 'Remedi Kitchen'
-                },
-                {
-                    'title': 'Spinach Almond Salad',
-                    'image': 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400',
-                    'readyInMinutes': 10,
-                    'servings': 2,
-                    'description': 'Fresh spinach with toasted almonds, sunflower seeds, and olive oil.',
-                    'source': 'Remedi Kitchen'
-                }
-            ],
-            'Probiotics': [
-                {
-                    'title': 'Greek Yogurt Parfait',
-                    'image': 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400',
-                    'readyInMinutes': 5,
-                    'servings': 1,
-                    'description': 'Layers of Greek yogurt, granola, and fresh berries.',
-                    'source': 'Remedi Kitchen'
-                },
-                {
-                    'title': 'Kimchi Fried Rice',
-                    'image': 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400',
-                    'readyInMinutes': 15,
-                    'servings': 2,
-                    'description': 'Fermented kimchi with brown rice, vegetables, and a fried egg.',
-                    'source': 'Remedi Kitchen'
-                }
-            ],
-            'Magnesium': [
-                {
-                    'title': 'Dark Chocolate Banana Smoothie',
-                    'image': 'https://images.unsplash.com/photo-1553530666-ba11a90bb8b3?w=400',
-                    'readyInMinutes': 5,
-                    'servings': 1,
-                    'description': 'Frozen banana, dark cocoa, almond milk, and a touch of honey.',
-                    'source': 'Remedi Kitchen'
-                },
-                {
-                    'title': 'Spinach and White Bean Soup',
-                    'image': 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400',
-                    'readyInMinutes': 30,
-                    'servings': 4,
-                    'description': 'Hearty soup with spinach, white beans, and garlic.',
-                    'source': 'Remedi Kitchen'
-                }
-            ],
-            'Iron': [
-                {
-                    'title': 'Lentil Curry',
-                    'image': 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400',
-                    'readyInMinutes': 35,
-                    'servings': 4,
-                    'description': 'Warming lentil curry with spinach and aromatic spices.',
-                    'source': 'Remedi Kitchen'
-                },
-                {
-                    'title': 'Steak and Spinach Salad',
-                    'image': 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400',
-                    'readyInMinutes': 20,
-                    'servings': 2,
-                    'description': 'Grilled steak slices over fresh spinach with balsamic.',
-                    'source': 'Remedi Kitchen'
-                }
-            ],
-            'Vitamin D': [
-                {
-                    'title': 'Mushroom and Egg Breakfast',
-                    'image': 'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=400',
-                    'readyInMinutes': 15,
-                    'servings': 2,
-                    'description': 'Sauteed mushrooms with poached eggs and whole grain toast.',
-                    'source': 'Remedi Kitchen'
-                },
-                {
-                    'title': 'Grilled Salmon Salad',
-                    'image': 'https://images.unsplash.com/photo-1580476262798-bddd9f4b7369?w=400',
-                    'readyInMinutes': 25,
-                    'servings': 2,
-                    'description': 'Grilled salmon over mixed greens with avocado and citrus.',
-                    'source': 'Remedi Kitchen'
-                }
-            ],
-            'Fiber': [
-                {
-                    'title': 'Overnight Oats',
-                    'image': 'https://images.unsplash.com/photo-1517673400267-0251440c45dc?w=400',
-                    'readyInMinutes': 5,
-                    'servings': 1,
-                    'description': 'Oats soaked overnight with chia seeds, berries, and almond milk.',
-                    'source': 'Remedi Kitchen'
-                },
-                {
-                    'title': 'Black Bean Buddha Bowl',
-                    'image': 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
-                    'readyInMinutes': 20,
-                    'servings': 2,
-                    'description': 'Black beans, quinoa, roasted vegetables, and tahini dressing.',
-                    'source': 'Remedi Kitchen'
-                }
-            ],
-            'default': [
-                {
-                    'title': 'Rainbow Veggie Bowl',
-                    'image': 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
-                    'readyInMinutes': 20,
-                    'servings': 2,
-                    'description': 'Colorful vegetables over quinoa with a lemon tahini dressing.',
-                    'source': 'Remedi Kitchen'
-                },
-                {
-                    'title': 'Mediterranean Salad',
-                    'image': 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=400',
-                    'readyInMinutes': 15,
-                    'servings': 4,
-                    'description': 'Fresh vegetables, olives, feta cheese, and olive oil.',
-                    'source': 'Remedi Kitchen'
-                }
-            ]
-        }
-
-        recipes = []
-        seen_titles = set()
-
-        # Get recipes matching the requested nutrients
-        for nutrient in nutrients:
-            if nutrient in fallback_recipes:
-                for recipe in fallback_recipes[nutrient]:
-                    if recipe['title'] not in seen_titles:
-                        recipes.append(recipe)
-                        seen_titles.add(recipe['title'])
-
-        # If no matches, use default recipes
-        if not recipes:
-            recipes = fallback_recipes['default']
-
-        return recipes[:5]

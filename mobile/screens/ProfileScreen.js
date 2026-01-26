@@ -10,6 +10,7 @@ import {
   Modal,
   Platform,
   RefreshControl,
+  TextInput,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -47,6 +48,7 @@ const DIET_TYPES = [
   { id: 'paleo', label: 'Paleo', icon: 'nutrition-outline' },
   { id: 'mediterranean', label: 'Mediterranean', icon: 'sunny-outline' },
   { id: 'low_carb', label: 'Low Carb', icon: 'trending-down-outline' },
+  { id: 'other', label: 'Other (specify)', icon: 'create-outline' },
 ];
 
 const ProfileScreen = ({ onLogout }) => {
@@ -66,6 +68,9 @@ const ProfileScreen = ({ onLogout }) => {
   const [selectedGoals, setSelectedGoals] = useState([]);
   const [selectedAllergies, setSelectedAllergies] = useState([]);
   const [selectedDiet, setSelectedDiet] = useState('none');
+  const [customAllergy, setCustomAllergy] = useState('');
+  const [customDiet, setCustomDiet] = useState('');
+  const [healthConditions, setHealthConditions] = useState([]);
 
   useEffect(() => {
     loadProfileData();
@@ -87,8 +92,28 @@ const ProfileScreen = ({ onLogout }) => {
       // Set editable values from profile or dietary preferences
       const prefs = profileData.dietaryPreferences || {};
       setSelectedGoals(prefs.preferences || profileData.nutritionGoals || []);
-      setSelectedAllergies(prefs.allergies || profileData.allergies || []);
-      setSelectedDiet(prefs.dietType || profileData.dietType || 'none');
+      setHealthConditions(profileData.healthConditions || []);
+
+      // Handle allergies - separate predefined and custom
+      const allAllergies = prefs.allergies || profileData.allergies || [];
+      const predefinedIds = ALLERGIES.map(a => a.id);
+      const predefined = allAllergies.filter(a => predefinedIds.includes(a));
+      const custom = allAllergies.filter(a => !predefinedIds.includes(a));
+      setSelectedAllergies(predefined);
+      setCustomAllergy(custom.join(', '));
+
+      // Handle diet type - check if it's predefined or custom
+      const dietValue = prefs.dietType || profileData.dietType || 'none';
+      const predefinedDiets = DIET_TYPES.map(d => d.id);
+      if (predefinedDiets.includes(dietValue)) {
+        setSelectedDiet(dietValue);
+        setCustomDiet('');
+      } else if (dietValue && dietValue !== 'none') {
+        setSelectedDiet('other');
+        setCustomDiet(dietValue);
+      } else {
+        setSelectedDiet('none');
+      }
     } catch (error) {
       console.error('Error loading profile:', error);
       Alert.alert('Error', 'Failed to load profile data');
@@ -122,10 +147,21 @@ const ProfileScreen = ({ onLogout }) => {
   const savePreferences = async () => {
     try {
       setSaving(true);
+
+      // Combine predefined and custom allergies
+      let allAllergies = [...selectedAllergies];
+      if (customAllergy.trim()) {
+        const customItems = customAllergy.split(',').map(a => a.trim()).filter(a => a);
+        allAllergies = [...allAllergies, ...customItems];
+      }
+
+      // Get the actual diet type value
+      const dietTypeValue = selectedDiet === 'other' ? customDiet : selectedDiet;
+
       await authAPI.updateDietaryPreferences({
         preferences: selectedGoals,
-        allergies: selectedAllergies,
-        dietType: selectedDiet,
+        allergies: allAllergies,
+        dietType: dietTypeValue,
         restrictions: [],
       });
 
@@ -133,8 +169,8 @@ const ProfileScreen = ({ onLogout }) => {
       setProfile((prev) => ({
         ...prev,
         nutritionGoals: selectedGoals,
-        allergies: selectedAllergies,
-        dietType: selectedDiet,
+        allergies: allAllergies,
+        dietType: dietTypeValue,
       }));
 
       setGoalsModalVisible(false);
@@ -262,11 +298,22 @@ const ProfileScreen = ({ onLogout }) => {
     ? selectedGoals.map((g) => NUTRITION_GOALS.find((ng) => ng.id === g)?.label || g).join(', ')
     : 'Tap to set your goals';
 
-  const allergiesDisplay = selectedAllergies.length > 0
-    ? selectedAllergies.map((a) => ALLERGIES.find((al) => al.id === a)?.label || a).join(', ')
-    : 'None';
+  // Build allergies display including custom ones
+  const allergyLabels = selectedAllergies.map((a) => ALLERGIES.find((al) => al.id === a)?.label || a);
+  if (customAllergy.trim()) {
+    allergyLabels.push(...customAllergy.split(',').map(a => a.trim()).filter(a => a));
+  }
+  const allergiesDisplay = allergyLabels.length > 0 ? allergyLabels.join(', ') : 'None';
 
-  const dietDisplay = DIET_TYPES.find((d) => d.id === selectedDiet)?.label || 'Not set';
+  // Build diet display including custom
+  const dietDisplay = selectedDiet === 'other'
+    ? (customDiet || 'Custom diet')
+    : (DIET_TYPES.find((d) => d.id === selectedDiet)?.label || 'Not set');
+
+  // Health conditions display
+  const healthConditionsDisplay = healthConditions.length > 0
+    ? healthConditions.join(', ')
+    : 'None specified';
 
   return (
     <LinearGradient colors={gradients.main} style={styles.container}>
@@ -354,6 +401,28 @@ const ProfileScreen = ({ onLogout }) => {
           dietDisplay,
           () => setDietModalVisible(true),
           'nutrition-outline'
+        )}
+
+        {/* Health Conditions - Display Only */}
+        {healthConditions.length > 0 && (
+          <View style={styles.settingItem}>
+            <LinearGradient
+              colors={[colors.white, colors.offWhite]}
+              style={styles.settingGradient}
+            >
+              <View style={styles.settingContent}>
+                <View style={styles.settingIconContainer}>
+                  <Ionicons name="medical-outline" size={22} color={colors.primaryDark} />
+                </View>
+                <View style={styles.settingTextContainer}>
+                  <Text style={styles.settingTitle}>Health Conditions</Text>
+                  <Text style={styles.settingValue} numberOfLines={2}>
+                    {healthConditionsDisplay}
+                  </Text>
+                </View>
+              </View>
+            </LinearGradient>
+          </View>
         )}
 
         {/* Account Section */}
@@ -494,6 +563,18 @@ const ProfileScreen = ({ onLogout }) => {
               )}
             </TouchableOpacity>
           ))}
+
+          {/* Custom Allergy Input */}
+          <View style={styles.customInputContainer}>
+            <Text style={styles.customInputLabel}>Other allergies (comma separated):</Text>
+            <TextInput
+              style={styles.customInput}
+              value={customAllergy}
+              onChangeText={setCustomAllergy}
+              placeholder="e.g., Sesame, Mustard, Celery"
+              placeholderTextColor={colors.textMuted}
+            />
+          </View>
         </View>
       )}
 
@@ -533,6 +614,20 @@ const ProfileScreen = ({ onLogout }) => {
               )}
             </TouchableOpacity>
           ))}
+
+          {/* Custom Diet Input - shown when "Other" is selected */}
+          {selectedDiet === 'other' && (
+            <View style={styles.customInputContainer}>
+              <Text style={styles.customInputLabel}>Specify your diet:</Text>
+              <TextInput
+                style={styles.customInput}
+                value={customDiet}
+                onChangeText={setCustomDiet}
+                placeholder="e.g., Whole30, FODMAP, Carnivore"
+                placeholderTextColor={colors.textMuted}
+              />
+            </View>
+          )}
         </View>
       )}
     </LinearGradient>
@@ -841,6 +936,28 @@ const styles = StyleSheet.create({
   optionTextSelected: {
     fontWeight: '700',
     color: colors.primaryDark,
+  },
+  // Custom input styles
+  customInputContainer: {
+    marginTop: spacing.lg,
+    paddingTop: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.gray100,
+  },
+  customInputLabel: {
+    fontSize: typography.sm,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: spacing.sm,
+  },
+  customInput: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.gray200,
+    borderRadius: borderRadius.md,
+    padding: spacing.base,
+    fontSize: typography.base,
+    color: colors.text,
   },
 });
 

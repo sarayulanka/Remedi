@@ -29,6 +29,8 @@ const StoryOnboardingScreen = ({ route, navigation }) => {
     nutritionGoals: [],
     allergies: [],
     dietType: '',
+    customAllergy: '',
+    customDiet: '',
   });
 
   const steps = [
@@ -75,6 +77,9 @@ const StoryOnboardingScreen = ({ route, navigation }) => {
       field: 'allergies',
       multiSelect: true,
       skippable: true,
+      hasCustomInput: true,
+      customField: 'customAllergy',
+      customPlaceholder: 'Type other allergies...',
       options: [
         { value: 'Peanuts', emoji: '🥜' },
         { value: 'Tree Nuts', emoji: '🌰' },
@@ -94,6 +99,9 @@ const StoryOnboardingScreen = ({ route, navigation }) => {
       field: 'dietType',
       multiSelect: false,
       skippable: true,
+      hasCustomInput: true,
+      customField: 'customDiet',
+      customPlaceholder: 'Specify your diet...',
       options: [
         { value: 'No Restrictions', emoji: '🍴' },
         { value: 'Vegetarian', emoji: '🥬' },
@@ -103,6 +111,7 @@ const StoryOnboardingScreen = ({ route, navigation }) => {
         { value: 'Paleo', emoji: '🍖' },
         { value: 'Halal', emoji: '☪️' },
         { value: 'Kosher', emoji: '✡️' },
+        { value: 'Other', emoji: '✏️' },
       ],
     },
     {
@@ -198,11 +207,26 @@ const StoryOnboardingScreen = ({ route, navigation }) => {
   };
 
   const handleComplete = () => {
+    // Merge custom allergies into allergies array
+    let finalAllergies = [...(formData.allergies || [])];
+    if (formData.customAllergy?.trim()) {
+      const customItems = formData.customAllergy.split(',').map(a => a.trim()).filter(a => a);
+      finalAllergies = [...finalAllergies, ...customItems];
+    }
+
+    // Use custom diet if "Other" was selected
+    const finalDietType = formData.dietType === 'Other'
+      ? formData.customDiet
+      : formData.dietType;
+
     navigation.navigate('SignupComplete', {
       username,
       email,
       password,
-      ...formData,
+      fullName: formData.fullName,
+      nutritionGoals: formData.nutritionGoals,
+      allergies: finalAllergies,
+      dietType: finalDietType,
     });
   };
 
@@ -271,13 +295,17 @@ const StoryOnboardingScreen = ({ route, navigation }) => {
         );
 
       case 'choice':
+        const showCustomInput = currentStepData.hasCustomInput && (
+          currentStepData.multiSelect ||
+          formData[currentStepData.field] === 'Other'
+        );
         return (
           <Animated.View style={[styles.stepContainer, animatedStyle]}>
             <Text style={styles.emoji}>{currentStepData.emoji}</Text>
             <Text style={styles.question}>{currentStepData.question}</Text>
             <Text style={styles.subtitle}>{currentStepData.subtitle}</Text>
-            
-            <ScrollView 
+
+            <ScrollView
               style={styles.optionsScrollView}
               contentContainerStyle={styles.optionsContainer}
               showsVerticalScrollIndicator={false}
@@ -318,6 +346,24 @@ const StoryOnboardingScreen = ({ route, navigation }) => {
                   </TouchableOpacity>
                 );
               })}
+
+              {/* Custom Input Field */}
+              {showCustomInput && (
+                <View style={styles.customInputWrapper}>
+                  <Text style={styles.customInputLabel}>
+                    {currentStepData.multiSelect ? 'Add other:' : 'Specify:'}
+                  </Text>
+                  <TextInput
+                    style={styles.customInputField}
+                    placeholder={currentStepData.customPlaceholder}
+                    placeholderTextColor={colors.textMuted}
+                    value={formData[currentStepData.customField]}
+                    onChangeText={(text) =>
+                      setFormData({ ...formData, [currentStepData.customField]: text })
+                    }
+                  />
+                </View>
+              )}
             </ScrollView>
           </Animated.View>
         );
@@ -627,6 +673,31 @@ const styles = StyleSheet.create({
   },
   nextButtonTextDisabled: {
     color: colors.textMuted,
+  },
+  // Custom input styles
+  customInputWrapper: {
+    marginTop: spacing.lg,
+    paddingTop: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.gray100,
+  },
+  customInputLabel: {
+    fontSize: typography.sm,
+    fontWeight: '600',
+    color: colors.textLight,
+    marginBottom: spacing.sm,
+    textAlign: 'center',
+  },
+  customInputField: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    padding: spacing.base,
+    fontSize: typography.base,
+    color: colors.text,
+    textAlign: 'center',
+    borderWidth: 1,
+    borderColor: colors.gray200,
+    ...shadows.sm,
   },
 });
 

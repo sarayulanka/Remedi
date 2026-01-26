@@ -56,20 +56,22 @@ const tabStyles = StyleSheet.create({
   iconContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    marginTop: 6,
     marginBottom: Platform.OS === 'ios' ? 0 : 4,
   },
   iconContainerFocused: {
     transform: [{ scale: 1.05 }],
   },
   iconGradient: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 66,
+    height: 66,
+    borderRadius: 33,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingBottom: 6,
   },
   icon: {
     textAlign: 'center',
@@ -108,7 +110,7 @@ function MainTabs({ navigation }) {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarActiveTintColor: colors.primaryDark,
+        tabBarActiveTintColor: colors.white,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
           position: 'absolute',
@@ -118,10 +120,10 @@ function MainTabs({ navigation }) {
           backgroundColor: colors.white,
           borderTopColor: colors.gray100,
           borderTopWidth: 0,
-          paddingBottom: Platform.OS === 'ios' ? 30 : 16,
-          paddingTop: 12,
-          paddingHorizontal: 10,
-          height: Platform.OS === 'ios' ? 100 : 85,
+          paddingBottom: Platform.OS === 'ios' ? 24 : 10,
+          paddingTop: 8,
+          paddingHorizontal: 6,
+          height: Platform.OS === 'ios' ? 90 : 75,
           elevation: 25,
           shadowColor: colors.primaryDark,
           shadowOffset: { width: 0, height: -8 },
@@ -205,6 +207,7 @@ export default function App() {
         setIsFirstLaunch(true);
         await AsyncStorage.setItem('hasLaunched', 'true');
       } else {
+        
         setIsFirstLaunch(false);
       }
 

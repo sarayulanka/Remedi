@@ -43,6 +43,8 @@ class UserProfile(BaseModel):
     location: Optional[str] = None
     nutritionGoals: Optional[List[str]] = None
     healthConditions: Optional[List[str]] = None
+    allergies: Optional[List[str]] = None
+    dietType: Optional[str] = None
     dietaryPreferences: Optional[DietaryPreferences] = None
     createdAt: str
     updatedAt: str
@@ -106,3 +108,6 @@ class HealthAnalysisRequest(BaseModel):
     imageBase64: Optional[str] = None
     textDescription: Optional[str] = None
     userConcerns: Optional[str] = None
+    # User dietary preferences for filtering
+    allergies: Optional[List[str]] = []
+    dietType: Optional[str] = None

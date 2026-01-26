@@ -177,12 +177,33 @@ const GoalsScreen = () => {
       const result = await gamificationAPI.updateGoalProgress(goalId);
       if (result.completed) {
         Alert.alert('Goal Complete!', 'Congratulations! You achieved your goal!');
+        // Check if all goals are now completed and generate new ones
+        checkAndGenerateGoals();
       } else {
-        Alert.alert('Progress Updated!', `Day ${result.currentDays} of ${result.targetDays} complete!`);
+        // Show XP earned in the message
+        const xpMessage = result.xp?.xpAwarded
+          ? ` (+${result.xp.xpAwarded} XP)`
+          : '';
+        Alert.alert('Progress Updated!', `Day ${result.currentDays} of ${result.targetDays} complete!${xpMessage}`);
       }
       loadData();
     } catch (error) {
       Alert.alert('Error', 'Failed to update progress');
+    }
+  };
+
+  const checkAndGenerateGoals = async () => {
+    try {
+      const result = await gamificationAPI.generateGoals();
+      if (result.generated) {
+        Alert.alert(
+          'New Goals Generated!',
+          `You've completed all your goals! ${result.newGoals.length} new personalized goals have been created for you.`,
+          [{ text: 'View Goals', onPress: loadData }]
+        );
+      }
+    } catch (error) {
+      console.error('Error generating goals:', error);
     }
   };
 

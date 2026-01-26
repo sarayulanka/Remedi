@@ -10,6 +10,7 @@ from routes.auth_routes import router as auth_router
 from routes.health_routes import router as health_router
 from routes.location_routes import router as location_router
 from routes.gamification_routes import router as gamification_router
+from routes.image_routes import router as image_router
 
 load_dotenv()
 
@@ -30,7 +31,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     try:
         body = await request.body()
         print(f"Request body: {body.decode()}")
-    except:
+    except Exception:
         pass
     print("=" * 80)
     
@@ -72,6 +73,7 @@ app.include_router(auth_router)
 app.include_router(health_router)
 app.include_router(location_router)
 app.include_router(gamification_router)
+app.include_router(image_router)
 
 @app.get("/health")
 async def health_check():
