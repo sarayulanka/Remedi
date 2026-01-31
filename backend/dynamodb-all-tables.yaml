@@ -1,0 +1,733 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Remedi Application — ALL-DynamoDB Schema (v2.0.0)
+  Complete NoSQL data store. Every application entity lives in DynamoDB.
+  Uses a pragmatic multi-table design (one table per entity domain) with
+  composite sort keys and GSIs for alternate access patterns.
+
+# ============================================================================
+# PARAMETERS
+# ============================================================================
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, staging, prod]
+
+  ActivityTTLDays:
+    Type: Number
+    Default: 365
+
+  NotificationTTLDays:
+    Type: Number
+    Default: 90
+
+  AlertTTLDays:
+    Type: Number
+    Default: 180
+
+# ============================================================================
+# RESOURCES
+# ============================================================================
+Resources:
+
+  # ==========================================================================
+  # TABLE 1 — USERS (profile + preferences in one table)
+  # ==========================================================================
+  #
+  # Item types stored (discriminated by sort key prefix):
+  #
+  # ┌────────────┬──────────────────────────┬──────────────────────────────┐
+  # │ PK (email) │ SK (record_type)         │ Example attributes           │
+  # ├────────────┼──────────────────────────┼──────────────────────────────┤
+  # │ jane@…     │ PROFILE                  │ username, first_name, …      │
+  # │ jane@…     │ PREF#REASON#WEIGHT_LOSS  │ reference_value, …           │
+  # │ jane@…     │ PREF#ALLERGY#GLUTEN      │ reference_value, …           │
+  # │ jane@…     │ PREF#DIET#VEGAN          │ reference_value, …           │
+  # └────────────┴──────────────────────────┴──────────────────────────────┘
+  #
+  # Access Patterns:
+  #   1. Get user profile         → GetItem: PK=email, SK="PROFILE"
+  #   2. Get all user data        → Query:   PK=email (returns profile + all prefs)
+  #   3. Get user reasons         → Query:   PK=email, SK begins_with "PREF#REASON#"
+  #   4. Get user allergies       → Query:   PK=email, SK begins_with "PREF#ALLERGY#"
+  #   5. Get user diet            → Query:   PK=email, SK begins_with "PREF#DIET#"
+  #   6. Lookup by username       → Query GSI1: PK=username
+  # ==========================================================================
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'remedi-users'
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      DeletionProtectionEnabled: true
+
+      AttributeDefinitions:
+        - AttributeName: email
+          AttributeType: S
+        - AttributeName: record_type
+          AttributeType: S
+        - AttributeName: username
+          AttributeType: S
+
+      KeySchema:
+        - AttributeName: email
+          KeyType: HASH
+        - AttributeName: record_type
+          KeyType: RANGE
+
+      GlobalSecondaryIndexes:
+        # GSI1 — Lookup user by username (unique constraint enforced in app layer)
+        - IndexName: gsi-username
+          KeySchema:
+            - AttributeName: username
+              KeyType: HASH
+          Projection:
+            ProjectionType: KEYS_ONLY
+
+      Tags:
+        - Key: Application
+          Value: Remedi
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ==========================================================================
+  # TABLE 2 — REFERENCE VALUES
+  # ==========================================================================
+  #
+  # ┌──────────────────┬───────────────┬─────────────────────────────────┐
+  # │ PK (ref_type)    │ SK (ref_id)   │ Example attributes              │
+  # ├──────────────────┼───────────────┼─────────────────────────────────┤
+  # │ REASON           │ WEIGHT_LOSS   │ reference_value, description, … │
+  # │ ALLERGY          │ GLUTEN        │ reference_value, description, … │
+  # │ DIET             │ VEGAN         │ reference_value, description, … │
+  # │ BADGE            │ STREAK_7      │ reference_value, description, … │
+  # │ NOTIFICATION_TYPE│ BADGE_EARNED  │ reference_value, description, … │
+  # │ ALERT_CONDITION  │ STREAK_RISK   │ reference_value, description, … │
+  # └──────────────────┴───────────────┴─────────────────────────────────┘
+  #
+  # Access Patterns:
+  #   1. Get all values for a type → Query: PK=reference_type
+  #   2. Get single value          → GetItem: PK=reference_type, SK=reference_id
+  # ==========================================================================
+  ReferenceValuesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'remedi-reference-values'
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+      AttributeDefinitions:
+        - AttributeName: reference_type
+          AttributeType: S
+        - AttributeName: reference_id
+          AttributeType: S
+
+      KeySchema:
+        - AttributeName: reference_type
+          KeyType: HASH
+        - AttributeName: reference_id
+          KeyType: RANGE
+
+      Tags:
+        - Key: Application
+          Value: Remedi
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ==========================================================================
+  # TABLE 3 — GOALS
+  # ==========================================================================
+  #
+  # ┌────────────┬──────────────────────────┬──────────────────────────┐
+  # │ PK (email) │ SK (goal_id)             │ Example attributes       │
+  # ├────────────┼──────────────────────────┼──────────────────────────┤
+  # │ jane@…     │ g-f47ac10b-58cc-…        │ title, target_days, …    │
+  # └────────────┴──────────────────────────┴──────────────────────────┘
+  #
+  # Access Patterns:
+  #   1. Get all goals for user    → Query: PK=email
+  #   2. Get single goal           → GetItem: PK=email, SK=goal_id
+  #   3. Get goals by status       → Query GSI1: PK=email, SK begins_with "ACTIVE"
+  #   4. Goal deadline monitoring  → Query GSI2: PK=status, SK between dates
+  # ==========================================================================
+  GoalsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'remedi-goals'
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+      AttributeDefinitions:
+        - AttributeName: email
+          AttributeType: S
+        - AttributeName: goal_id
+          AttributeType: S
+        - AttributeName: status_created_at
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+        - AttributeName: end_date
+          AttributeType: S
+
+      KeySchema:
+        - AttributeName: email
+          KeyType: HASH
+        - AttributeName: goal_id
+          KeyType: RANGE
+
+      GlobalSecondaryIndexes:
+        # GSI1 — Filter goals by status per user
+        # SK composite: "ACTIVE#2026-01-15T00:00:00Z"
+        - IndexName: gsi-email-status
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+            - AttributeName: status_created_at
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+        # GSI2 — System-wide goal deadline monitoring
+        # Query: PK="ACTIVE", SK between "2026-01-28" and "2026-01-31"
+        - IndexName: gsi-status-end-date
+          KeySchema:
+            - AttributeName: status
+              KeyType: HASH
+            - AttributeName: end_date
+              KeyType: RANGE
+          Projection:
+            ProjectionType: INCLUDE
+            NonKeyAttributes:
+              - email
+              - title
+              - target_days
+              - completed_days
+
+      Tags:
+        - Key: Application
+          Value: Remedi
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ==========================================================================
+  # TABLE 4 — REWARDS
+  # ==========================================================================
+  #
+  # ┌────────────┬──────────────────────────────┬───────────────────────┐
+  # │ PK (email) │ SK (date_earned#reward_id)   │ Example attributes    │
+  # ├────────────┼──────────────────────────────┼───────────────────────┤
+  # │ jane@…     │ 2026-01-31#r-b21f1a3e-…      │ badge_id, notes, …   │
+  # └────────────┴──────────────────────────────┴───────────────────────┘
+  #
+  # Access Patterns:
+  #   1. Get all rewards (newest first) → Query: PK=email, ScanIndexForward=false
+  #   2. Get rewards in date range      → Query: PK=email, SK between d1# and d2#~
+  #   3. Get all earners of a badge     → Query GSI1: PK=badge_id
+  # ==========================================================================
+  RewardsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'remedi-rewards'
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+      AttributeDefinitions:
+        - AttributeName: email
+          AttributeType: S
+        - AttributeName: date_reward_id
+          AttributeType: S
+        - AttributeName: badge_id
+          AttributeType: S
+        - AttributeName: date_earned
+          AttributeType: S
+
+      KeySchema:
+        - AttributeName: email
+          KeyType: HASH
+        - AttributeName: date_reward_id
+          KeyType: RANGE
+
+      GlobalSecondaryIndexes:
+        # GSI1 — Find all earners of a specific badge
+        - IndexName: gsi-badge-date
+          KeySchema:
+            - AttributeName: badge_id
+              KeyType: HASH
+            - AttributeName: date_earned
+              KeyType: RANGE
+          Projection:
+            ProjectionType: INCLUDE
+            NonKeyAttributes:
+              - email
+              - goal_id
+              - notes
+
+      Tags:
+        - Key: Application
+          Value: Remedi
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ==========================================================================
+  # TABLE 5 — RECIPES (entity cluster: single-table for recipe + children)
+  # ==========================================================================
+  #
+  # Item types stored (discriminated by sort key prefix):
+  #
+  # ┌─────────────────┬───────────────────────┬──────────────────────────────┐
+  # │ PK (recipe_id)  │ SK (record_type)      │ Example attributes           │
+  # ├─────────────────┼───────────────────────┼──────────────────────────────┤
+  # │ r-a1b2c3…       │ META                  │ title, description, cals, …  │
+  # │ r-a1b2c3…       │ INGR#001              │ name, quantity, unit, …      │
+  # │ r-a1b2c3…       │ INGR#002              │ name, quantity, unit, …      │
+  # │ r-a1b2c3…       │ DIET#VEGAN            │ reference_value              │
+  # │ r-a1b2c3…       │ DIET#KETO             │ reference_value              │
+  # │ r-a1b2c3…       │ ALRG#GLUTEN           │ reference_value              │
+  # │ r-a1b2c3…       │ ALRG#DAIRY            │ reference_value              │
+  # └─────────────────┴───────────────────────┴──────────────────────────────┘
+  #
+  # Access Patterns:
+  #   1. Get full recipe + children → Query: PK=recipe_id
+  #   2. Get recipe metadata only   → GetItem: PK=recipe_id, SK="META"
+  #   3. Get ingredients only       → Query: PK=recipe_id, SK begins_with "INGR#"
+  #   4. Get diet tags only         → Query: PK=recipe_id, SK begins_with "DIET#"
+  #   5. Get allergen tags only     → Query: PK=recipe_id, SK begins_with "ALRG#"
+  #   6. Find recipes by meal type  → Query GSI1: PK=meal_type, SK (sort by created_at)
+  #   7. Find recipes by cuisine    → Query GSI2: PK=cuisine_type, SK (sort by created_at)
+  #   8. Find recipes by diet       → Query GSI3: PK="DIET#VEGAN"
+  #   9. Find recipes by allergen   → Query GSI3: PK="ALRG#GLUTEN"
+  #  10. Search by difficulty        → Query GSI4: PK=difficulty_level
+  # ==========================================================================
+  RecipesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'remedi-recipes'
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      DeletionProtectionEnabled: true
+
+      AttributeDefinitions:
+        - AttributeName: recipe_id
+          AttributeType: S
+        - AttributeName: record_type
+          AttributeType: S
+        - AttributeName: meal_type
+          AttributeType: S
+        - AttributeName: created_at
+          AttributeType: S
+        - AttributeName: cuisine_type
+          AttributeType: S
+        - AttributeName: gsi3_pk
+          AttributeType: S
+        - AttributeName: difficulty_level
+          AttributeType: S
+
+      KeySchema:
+        - AttributeName: recipe_id
+          KeyType: HASH
+        - AttributeName: record_type
+          KeyType: RANGE
+
+      GlobalSecondaryIndexes:
+        # GSI1 — Browse recipes by meal type (only META items project here)
+        - IndexName: gsi-meal-type
+          KeySchema:
+            - AttributeName: meal_type
+              KeyType: HASH
+            - AttributeName: created_at
+              KeyType: RANGE
+          Projection:
+            ProjectionType: INCLUDE
+            NonKeyAttributes:
+              - recipe_id
+              - title
+              - calories_per_serving
+              - total_time_minutes
+              - difficulty_level
+              - image_url
+
+        # GSI2 — Browse recipes by cuisine
+        - IndexName: gsi-cuisine-type
+          KeySchema:
+            - AttributeName: cuisine_type
+              KeyType: HASH
+            - AttributeName: created_at
+              KeyType: RANGE
+          Projection:
+            ProjectionType: INCLUDE
+            NonKeyAttributes:
+              - recipe_id
+              - title
+              - meal_type
+              - calories_per_serving
+              - image_url
+
+        # GSI3 — Inverted index for diet/allergen lookups
+        # DIET items:    gsi3_pk = "DIET#VEGAN",   SK = recipe_id
+        # ALLERGEN items: gsi3_pk = "ALRG#GLUTEN", SK = recipe_id
+        # → "Find all recipes compatible with VEGAN diet"
+        # → "Find all recipes containing GLUTEN" (then exclude)
+        - IndexName: gsi-diet-allergen-index
+          KeySchema:
+            - AttributeName: gsi3_pk
+              KeyType: HASH
+            - AttributeName: recipe_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: INCLUDE
+            NonKeyAttributes:
+              - title
+              - meal_type
+              - calories_per_serving
+              - image_url
+
+        # GSI4 — Browse recipes by difficulty
+        - IndexName: gsi-difficulty
+          KeySchema:
+            - AttributeName: difficulty_level
+              KeyType: HASH
+            - AttributeName: created_at
+              KeyType: RANGE
+          Projection:
+            ProjectionType: INCLUDE
+            NonKeyAttributes:
+              - recipe_id
+              - title
+              - meal_type
+              - calories_per_serving
+              - total_time_minutes
+              - image_url
+
+      Tags:
+        - Key: Application
+          Value: Remedi
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ==========================================================================
+  # TABLE 6 — USER FAVORITE RECIPES
+  # ==========================================================================
+  #
+  # ┌────────────┬──────────────────────┬───────────────────────┐
+  # │ PK (email) │ SK (recipe_id)       │ Example attributes    │
+  # ├────────────┼──────────────────────┼───────────────────────┤
+  # │ jane@…     │ r-a1b2c3…            │ created_at, title     │
+  # └────────────┴──────────────────────┴───────────────────────┘
+  #
+  # Access Patterns:
+  #   1. Get all favorites for user  → Query: PK=email
+  #   2. Check if user saved recipe  → GetItem: PK=email, SK=recipe_id
+  #   3. Get all users who saved a recipe → Query GSI1: PK=recipe_id
+  # ==========================================================================
+  UserFavoritesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'remedi-user-favorites'
+      BillingMode: PAY_PER_REQUEST
+
+      AttributeDefinitions:
+        - AttributeName: email
+          AttributeType: S
+        - AttributeName: recipe_id
+          AttributeType: S
+
+      KeySchema:
+        - AttributeName: email
+          KeyType: HASH
+        - AttributeName: recipe_id
+          KeyType: RANGE
+
+      GlobalSecondaryIndexes:
+        # GSI1 — Inverse lookup: who favorited this recipe?
+        - IndexName: gsi-recipe-users
+          KeySchema:
+            - AttributeName: recipe_id
+              KeyType: HASH
+            - AttributeName: email
+              KeyType: RANGE
+          Projection:
+            ProjectionType: KEYS_ONLY
+
+      Tags:
+        - Key: Application
+          Value: Remedi
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ==========================================================================
+  # TABLE 7 — USER ACTIVITY
+  # ==========================================================================
+  #
+  # ┌────────────┬──────────────────────────────┬───────────────────────┐
+  # │ PK (email) │ SK (timestamp)               │ Example attributes    │
+  # ├────────────┼──────────────────────────────┼───────────────────────┤
+  # │ jane@…     │ 2026-01-31T08:15:22.000Z     │ api_endpoint, …       │
+  # └────────────┴──────────────────────────────┴───────────────────────┘
+  #
+  # Access Patterns:
+  #   1. Activity in date range     → Query: PK=email, SK between t1 and t2
+  #   2. Daily distinct dates       → Query GSI1: PK=email, SK range on activity_date
+  #   3. API usage analytics        → Query GSI2: PK=api_endpoint, SK range on timestamp
+  # ==========================================================================
+  UserActivityTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'remedi-user-activity'
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      DeletionProtectionEnabled: true
+
+      AttributeDefinitions:
+        - AttributeName: email
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: S
+        - AttributeName: activity_date
+          AttributeType: S
+        - AttributeName: api_endpoint
+          AttributeType: S
+
+      KeySchema:
+        - AttributeName: email
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+
+      GlobalSecondaryIndexes:
+        - IndexName: gsi-email-activity-date
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+            - AttributeName: activity_date
+              KeyType: RANGE
+          Projection:
+            ProjectionType: INCLUDE
+            NonKeyAttributes:
+              - api_endpoint
+              - session_id
+
+        - IndexName: gsi-api-endpoint-timestamp
+          KeySchema:
+            - AttributeName: api_endpoint
+              KeyType: HASH
+            - AttributeName: timestamp
+              KeyType: RANGE
+          Projection:
+            ProjectionType: INCLUDE
+            NonKeyAttributes:
+              - email
+              - http_method
+              - response_status
+
+      TimeToLiveSpecification:
+        AttributeName: ttl_expiry
+        Enabled: true
+
+      Tags:
+        - Key: Application
+          Value: Remedi
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ==========================================================================
+  # TABLE 8 — NOTIFICATIONS
+  # ==========================================================================
+  #
+  # ┌────────────┬──────────────────────────────┬──────────────────────────┐
+  # │ PK (email) │ SK (created_at)              │ Example attributes       │
+  # ├────────────┼──────────────────────────────┼──────────────────────────┤
+  # │ jane@…     │ 2026-01-31T09:00:00.000Z     │ type, message_text, …   │
+  # └────────────┴──────────────────────────────┴──────────────────────────┘
+  #
+  # Access Patterns:
+  #   1. Latest notifications       → Query: PK=email, ScanIndexForward=false
+  #   2. Unread notifications       → Query GSI1: PK=email, SK begins_with "UNREAD#"
+  # ==========================================================================
+  NotificationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'remedi-notifications'
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+      AttributeDefinitions:
+        - AttributeName: email
+          AttributeType: S
+        - AttributeName: created_at
+          AttributeType: S
+        - AttributeName: read_status_created_at
+          AttributeType: S
+
+      KeySchema:
+        - AttributeName: email
+          KeyType: HASH
+        - AttributeName: created_at
+          KeyType: RANGE
+
+      GlobalSecondaryIndexes:
+        - IndexName: gsi-email-read-status
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+            - AttributeName: read_status_created_at
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+      TimeToLiveSpecification:
+        AttributeName: ttl_expiry
+        Enabled: true
+
+      Tags:
+        - Key: Application
+          Value: Remedi
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ==========================================================================
+  # TABLE 9 — ALERTS
+  # ==========================================================================
+  #
+  # ┌────────────┬──────────────────────────────┬──────────────────────────┐
+  # │ PK (email) │ SK (alert_date_id)           │ Example attributes       │
+  # ├────────────┼──────────────────────────────┼──────────────────────────┤
+  # │ jane@…     │ 2026-01-31#c3d4e5f6          │ condition, severity, …   │
+  # └────────────┴──────────────────────────────┴──────────────────────────┘
+  #
+  # Access Patterns:
+  #   1. All alerts for user        → Query: PK=email
+  #   2. Alerts on a date           → Query: PK=email, SK begins_with "2026-01-31"
+  #   3. Alerts by condition        → Query GSI1: PK=email, SK begins_with "STREAK_RISK#"
+  #   4. System-wide by condition   → Query GSI2: PK=condition
+  # ==========================================================================
+  AlertsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'remedi-alerts'
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+      AttributeDefinitions:
+        - AttributeName: email
+          AttributeType: S
+        - AttributeName: alert_date_id
+          AttributeType: S
+        - AttributeName: condition_alert_date
+          AttributeType: S
+        - AttributeName: condition
+          AttributeType: S
+
+      KeySchema:
+        - AttributeName: email
+          KeyType: HASH
+        - AttributeName: alert_date_id
+          KeyType: RANGE
+
+      GlobalSecondaryIndexes:
+        - IndexName: gsi-email-condition
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+            - AttributeName: condition_alert_date
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+        - IndexName: gsi-condition-date
+          KeySchema:
+            - AttributeName: condition
+              KeyType: HASH
+            - AttributeName: alert_date_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: INCLUDE
+            NonKeyAttributes:
+              - email
+              - severity
+              - is_acknowledged
+
+      TimeToLiveSpecification:
+        AttributeName: ttl_expiry
+        Enabled: true
+
+      Tags:
+        - Key: Application
+          Value: Remedi
+        - Key: Environment
+          Value: !Ref Environment
+
+# ============================================================================
+# OUTPUTS
+# ============================================================================
+Outputs:
+  UsersTableName:
+    Value: !Ref UsersTable
+    Export: { Name: !Sub '${Environment}-UsersTableName' }
+  UsersTableArn:
+    Value: !GetAtt UsersTable.Arn
+    Export: { Name: !Sub '${Environment}-UsersTableArn' }
+
+  ReferenceValuesTableName:
+    Value: !Ref ReferenceValuesTable
+    Export: { Name: !Sub '${Environment}-ReferenceValuesTableName' }
+  ReferenceValuesTableArn:
+    Value: !GetAtt ReferenceValuesTable.Arn
+    Export: { Name: !Sub '${Environment}-ReferenceValuesTableArn' }
+
+  GoalsTableName:
+    Value: !Ref GoalsTable
+    Export: { Name: !Sub '${Environment}-GoalsTableName' }
+  GoalsTableArn:
+    Value: !GetAtt GoalsTable.Arn
+    Export: { Name: !Sub '${Environment}-GoalsTableArn' }
+
+  RewardsTableName:
+    Value: !Ref RewardsTable
+    Export: { Name: !Sub '${Environment}-RewardsTableName' }
+  RewardsTableArn:
+    Value: !GetAtt RewardsTable.Arn
+    Export: { Name: !Sub '${Environment}-RewardsTableArn' }
+
+  RecipesTableName:
+    Value: !Ref RecipesTable
+    Export: { Name: !Sub '${Environment}-RecipesTableName' }
+  RecipesTableArn:
+    Value: !GetAtt RecipesTable.Arn
+    Export: { Name: !Sub '${Environment}-RecipesTableArn' }
+
+  UserFavoritesTableName:
+    Value: !Ref UserFavoritesTable
+    Export: { Name: !Sub '${Environment}-UserFavoritesTableName' }
+  UserFavoritesTableArn:
+    Value: !GetAtt UserFavoritesTable.Arn
+    Export: { Name: !Sub '${Environment}-UserFavoritesTableArn' }
+
+  UserActivityTableName:
+    Value: !Ref UserActivityTable
+    Export: { Name: !Sub '${Environment}-UserActivityTableName' }
+  UserActivityTableArn:
+    Value: !GetAtt UserActivityTable.Arn
+    Export: { Name: !Sub '${Environment}-UserActivityTableArn' }
+
+  NotificationsTableName:
+    Value: !Ref NotificationsTable
+    Export: { Name: !Sub '${Environment}-NotificationsTableName' }
+  NotificationsTableArn:
+    Value: !GetAtt NotificationsTable.Arn
+    Export: { Name: !Sub '${Environment}-NotificationsTableArn' }
+
+  AlertsTableName:
+    Value: !Ref AlertsTable
+    Export: { Name: !Sub '${Environment}-AlertsTableName' }
+  AlertsTableArn:
+    Value: !GetAtt AlertsTable.Arn
+    Export: { Name: !Sub '${Environment}-AlertsTableArn' }

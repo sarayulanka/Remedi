@@ -66,17 +66,9 @@ class UserService:
                 }
             )
             
-            # Initialize streak
-            self.table.put_item(
-                Item={
-                    'userId': user_id,
-                    'dataType': DATA_TYPE_STREAK,
-                    'currentStreak': 0,
-                    'longestStreak': 0,
-                    'lastCheckIn': None
-                }
-            )
-            
+            # Streak record is created on first gamification access
+            # via _ensure_streak_exists() with all required fields.
+
         except ClientError as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

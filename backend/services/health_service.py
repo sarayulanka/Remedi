@@ -10,6 +10,7 @@ from services.fda_service import FDAService
 from services.recipe_service import RecipeService
 from fastapi import HTTPException
 from database import get_table, DATA_TYPE_SAVED_REMEDY
+from services.gamification_service import GamificationService
 
 load_dotenv()
 
@@ -19,6 +20,7 @@ class HealthAnalysisService:
         self.fda_service = FDAService()
         self.recipe_service = RecipeService()
         self.table = get_table()
+        self.gamification_service = GamificationService()
 
     def analyze_health_concern(
         self,
@@ -143,6 +145,12 @@ class HealthAnalysisService:
             },
             'disclaimer': 'This information is for educational purposes only and is based on nutritional data from the FDA FoodData Central database and peer-reviewed research from the NIH. It is not a substitute for professional medical advice. Please consult a healthcare provider for proper diagnosis and treatment.'
         }
+
+        # Award the health_explorer badge on first analysis
+        try:
+            self.gamification_service.award_activity_badge(user_id, 'first_analysis')
+        except Exception:
+            pass  # Don't let badge failure break the analysis
 
         return response
 

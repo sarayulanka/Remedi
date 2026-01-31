@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Platform,
   Animated,
+  RefreshControl,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -110,6 +111,8 @@ const GoalsScreen = () => {
   const [badges, setBadges] = useState([]);
   const [availableBadges, setAvailableBadges] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [generatingGoals, setGeneratingGoals] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [templateModalVisible, setTemplateModalVisible] = useState(false);
   const [newGoal, setNewGoal] = useState({
@@ -137,7 +140,13 @@ const GoalsScreen = () => {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadData();
   };
 
   const selectTemplate = (template) => {
@@ -175,12 +184,12 @@ const GoalsScreen = () => {
   const updateProgress = async (goalId) => {
     try {
       const result = await gamificationAPI.updateGoalProgress(goalId);
-      if (result.completed) {
+      if (result.alreadyUpdated) {
+        Alert.alert('Already Done!', "You've already logged progress for this goal today.");
+      } else if (result.newlyCompleted) {
         Alert.alert('Goal Complete!', 'Congratulations! You achieved your goal!');
-        // Check if all goals are now completed and generate new ones
         checkAndGenerateGoals();
       } else {
-        // Show XP earned in the message
         const xpMessage = result.xp?.xpAwarded
           ? ` (+${result.xp.xpAwarded} XP)`
           : '';
@@ -188,8 +197,30 @@ const GoalsScreen = () => {
       }
       loadData();
     } catch (error) {
-      Alert.alert('Error', 'Failed to update progress');
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to update progress');
     }
+  };
+
+  const deleteGoal = (goalId, title) => {
+    Alert.alert(
+      'Delete Goal',
+      `Are you sure you want to delete "${title}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await gamificationAPI.deleteGoal(goalId);
+              loadData();
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete goal');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const checkAndGenerateGoals = async () => {
@@ -204,6 +235,27 @@ const GoalsScreen = () => {
       }
     } catch (error) {
       console.error('Error generating goals:', error);
+    }
+  };
+
+  const handleGenerateGoals = async () => {
+    setGeneratingGoals(true);
+    try {
+      const result = await gamificationAPI.generateGoals();
+      if (result.generated) {
+        Alert.alert(
+          'New Goals!',
+          `${result.newGoals.length} personalized goals have been created for you.`,
+          [{ text: 'View Goals', onPress: loadData }]
+        );
+      } else {
+        Alert.alert('Active Goals', result.message || 'Complete your current goals first.');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to generate goals. Please try again.');
+    } finally {
+      setGeneratingGoals(false);
+      loadData();
     }
   };
 
@@ -234,6 +286,9 @@ const GoalsScreen = () => {
         showsVerticalScrollIndicator={false}
         bounces={true}
         alwaysBounceVertical={true}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primaryDark} />
+        }
       >
         {/* Header */}
         <View style={styles.header}>
@@ -409,20 +464,30 @@ const GoalsScreen = () => {
                       </View>
                     </View>
 
-                    {!isCompleted && (
-                      <TouchableOpacity
-                        style={styles.updateButton}
-                        onPress={() => updateProgress(goal.goalId)}
-                        activeOpacity={0.8}
-                      >
-                        <LinearGradient
-                          colors={gradients.button}
-                          style={styles.updateButtonGradient}
+                    <View style={styles.goalActions}>
+                      {!isCompleted && (
+                        <TouchableOpacity
+                          style={styles.updateButton}
+                          onPress={() => updateProgress(goal.goalId)}
+                          activeOpacity={0.8}
                         >
-                          <Text style={styles.updateButtonText}>Mark Today Complete</Text>
-                        </LinearGradient>
+                          <LinearGradient
+                            colors={gradients.button}
+                            style={styles.updateButtonGradient}
+                          >
+                            <Ionicons name="checkmark-circle-outline" size={16} color={colors.white} style={{ marginRight: 6 }} />
+                            <Text style={styles.updateButtonText}>Mark Today Complete</Text>
+                          </LinearGradient>
+                        </TouchableOpacity>
+                      )}
+                      <TouchableOpacity
+                        style={styles.deleteButton}
+                        onPress={() => deleteGoal(goal.goalId, goal.title)}
+                        activeOpacity={0.7}
+                      >
+                        <Ionicons name="trash-outline" size={16} color={colors.error} />
                       </TouchableOpacity>
-                    )}
+                    </View>
                   </LinearGradient>
                 </View>
               );
@@ -435,6 +500,25 @@ const GoalsScreen = () => {
               <Text style={styles.emptyText}>No goals yet. Create your first goal or pick from templates!</Text>
             </View>
           )}
+
+          {/* AI Generate Goals Button */}
+          <TouchableOpacity
+            style={styles.generateButton}
+            onPress={handleGenerateGoals}
+            activeOpacity={0.8}
+            disabled={generatingGoals}
+          >
+            <View style={styles.generateButtonInner}>
+              {generatingGoals ? (
+                <ActivityIndicator size="small" color={colors.primaryDark} style={{ marginRight: 8 }} />
+              ) : (
+                <Ionicons name="sparkles-outline" size={18} color={colors.primaryDark} style={{ marginRight: 8 }} />
+              )}
+              <Text style={styles.generateButtonText}>
+                {generatingGoals ? 'Generating...' : 'Generate AI Goals'}
+              </Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* Available Badges */}
@@ -888,20 +972,56 @@ const styles = StyleSheet.create({
   progressGradient: {
     flex: 1,
   },
-  updateButton: {
+  goalActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginTop: spacing.base,
+    gap: spacing.sm,
+  },
+  updateButton: {
+    flex: 1,
     borderRadius: borderRadius.md,
     overflow: 'hidden',
     ...shadows.sm,
   },
   updateButtonGradient: {
+    flexDirection: 'row',
     paddingVertical: spacing.sm,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   updateButtonText: {
     fontSize: typography.sm,
     fontWeight: '700',
     color: colors.white,
+  },
+  deleteButton: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.errorLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  generateButton: {
+    marginHorizontal: spacing['2xl'],
+    marginTop: spacing.base,
+    borderRadius: borderRadius.md,
+    borderWidth: 2,
+    borderColor: colors.primaryDark,
+    borderStyle: 'dashed',
+    overflow: 'hidden',
+  },
+  generateButtonInner: {
+    flexDirection: 'row',
+    paddingVertical: spacing.base,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  generateButtonText: {
+    fontSize: typography.sm,
+    fontWeight: '700',
+    color: colors.primaryDark,
   },
   emptyState: {
     alignItems: 'center',

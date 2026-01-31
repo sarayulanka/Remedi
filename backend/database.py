@@ -1,5 +1,6 @@
 import boto3
 from botocore.exceptions import ClientError
+from decimal import Decimal
 import os
 from dotenv import load_dotenv
 
@@ -84,15 +85,53 @@ def create_table_if_not_exists():
             print(f"Error checking/creating table: {e}")
             return False
 
+def _clean_item(item):
+    """Recursively convert floats to Decimal and strip None values for DynamoDB."""
+    cleaned = {}
+    for k, v in item.items():
+        if v is None:
+            continue
+        if isinstance(v, float):
+            cleaned[k] = Decimal(str(v))
+        elif isinstance(v, dict):
+            cleaned[k] = _clean_item(v)
+        elif isinstance(v, list):
+            cleaned[k] = [
+                _clean_item(i) if isinstance(i, dict)
+                else Decimal(str(i)) if isinstance(i, float)
+                else i
+                for i in v if i is not None
+            ]
+        else:
+            cleaned[k] = v
+    return cleaned
+
+
+class _SafeTable:
+    """Wrapper around DynamoDB Table that auto-cleans items on put_item.
+    Converts Python floats to Decimal and strips None values so every
+    write across the entire app is safe."""
+
+    def __init__(self, table):
+        self._table = table
+
+    def put_item(self, **kwargs):
+        if 'Item' in kwargs:
+            kwargs['Item'] = _clean_item(kwargs['Item'])
+        return self._table.put_item(**kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self._table, name)
+
+
 def get_table():
-    """Get the DynamoDB table"""
-    return dynamodb.Table(table_name)
+    """Get the DynamoDB table wrapped with automatic type safety."""
+    return _SafeTable(dynamodb.Table(table_name))
 
 # Data type constants for the sort key
 DATA_TYPE_PROFILE = "PROFILE"
 DATA_TYPE_STREAK = "STREAK"
 DATA_TYPE_BADGE = "BADGE"
-DATA_TYPE_SAVED_LOCATION = "SAVED_LOCATION"
 DATA_TYPE_SAVED_REMEDY = "SAVED_REMEDY"
 DATA_TYPE_GOAL = "GOAL"
 DATA_TYPE_DIETARY_PREFS = "DIETARY_PREFS"

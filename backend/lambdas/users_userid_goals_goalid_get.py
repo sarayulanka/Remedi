@@ -1,0 +1,51 @@
+import json
+import os
+import boto3
+from datetime import datetime, timezone
+
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table(os.environ['GOALS_TABLE'])
+
+HEADERS = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+    'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS'
+}
+
+
+def respond(status_code, body):
+    return {
+        'statusCode': status_code,
+        'headers': HEADERS,
+        'body': json.dumps(body, default=str)
+    }
+
+
+def lambda_handler(event, context):
+    try:
+        # Extract userid (email) and goalid from path parameters
+        userid = event['pathParameters']['userid']
+        goalid = event['pathParameters']['goalid']
+
+        # GetItem from DynamoDB
+        response = table.get_item(
+            Key={
+                'email': userid,
+                'goal_id': goalid
+            }
+        )
+
+        item = response.get('Item')
+
+        if not item:
+            return respond(404, {
+                'error': f'Goal {goalid} not found for user {userid}'
+            })
+
+        return respond(200, item)
+
+    except KeyError as e:
+        return respond(400, {'error': f'Missing required parameter: {str(e)}'})
+    except Exception as e:
+        return respond(500, {'error': str(e)})

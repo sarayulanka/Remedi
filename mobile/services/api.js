@@ -77,39 +77,6 @@ export const healthAPI = {
   },
 };
 
-// Location API
-export const locationAPI = {
-  searchLocations: async (latitude, longitude, radius, types) => {
-    const params = new URLSearchParams({
-      latitude: latitude.toString(),
-      longitude: longitude.toString(),
-      radius: radius.toString(),
-    });
-    
-    if (types) {
-      params.append('types', types.join(','));
-    }
-    
-    const response = await api.get(`/locations/search?${params.toString()}`);
-    return response.data;
-  },
-
-  saveLocation: async (locationData) => {
-    const response = await api.post('/locations/save', locationData);
-    return response.data;
-  },
-
-  getSavedLocations: async () => {
-    const response = await api.get('/locations/saved');
-    return response.data;
-  },
-
-  deleteSavedLocation: async (locationId) => {
-    const response = await api.delete(`/locations/saved/${locationId}`);
-    return response.data;
-  },
-};
-
 // Gamification API
 export const gamificationAPI = {
   checkIn: async () => {

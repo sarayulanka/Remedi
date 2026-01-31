@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Optional
+from decimal import Decimal
 import uuid
 import os
 import json
@@ -7,6 +8,37 @@ from fastapi import HTTPException
 from openai import OpenAI
 from dotenv import load_dotenv
 from database import get_table, DATA_TYPE_STREAK, DATA_TYPE_BADGE, DATA_TYPE_GOAL, DATA_TYPE_FREEZE_LOG, DATA_TYPE_XP, DATA_TYPE_PROFILE
+
+
+def _clean_for_dynamo(item):
+    """Clean a dict for DynamoDB storage: convert floats to Decimal, strip None values."""
+    cleaned = {}
+    for key, value in item.items():
+        if value is None:
+            continue
+        if isinstance(value, float):
+            cleaned[key] = Decimal(str(value))
+        elif isinstance(value, dict):
+            cleaned[key] = _clean_for_dynamo(value)
+        elif isinstance(value, list):
+            cleaned[key] = [
+                _clean_for_dynamo(v) if isinstance(v, dict)
+                else Decimal(str(v)) if isinstance(v, float)
+                else v
+                for v in value if v is not None
+            ]
+        else:
+            cleaned[key] = value
+    return cleaned
+
+
+def _decimal_to_num(val):
+    """Convert a Decimal to int or float for JSON responses."""
+    if isinstance(val, Decimal):
+        if val == int(val):
+            return int(val)
+        return float(val)
+    return val
 
 load_dotenv()
 
@@ -114,12 +146,6 @@ class GamificationService:
                 'icon': '🔍',
                 'requirement': 'first_analysis'
             },
-            'location_scout': {
-                'name': 'Location Scout',
-                'description': 'Saved your first food location',
-                'icon': '📍',
-                'requirement': 'first_location'
-            },
             'goal_setter': {
                 'name': 'Goal Setter',
                 'description': 'Created your first nutrition goal',
@@ -160,23 +186,32 @@ class GamificationService:
                     'weeklyCheckIns': 0,
                     'weekStartDate': None
                 }
-                self.table.put_item(Item=streak_data)
+                self.table.put_item(Item=_clean_for_dynamo(streak_data))
                 return streak_data
             else:
-                # Ensure existing records have new fields
+                # Ensure existing records have all required fields
                 item = response['Item']
-                if 'streakFreezes' not in item:
-                    item['streakFreezes'] = 0
-                if 'freezesUsed' not in item:
-                    item['freezesUsed'] = 0
-                if 'lastFreezeEarned' not in item:
-                    item['lastFreezeEarned'] = None
-                if 'streakMilestones' not in item:
-                    item['streakMilestones'] = []
-                if 'weeklyCheckIns' not in item:
-                    item['weeklyCheckIns'] = 0
-                if 'weekStartDate' not in item:
-                    item['weekStartDate'] = None
+                needs_save = False
+                defaults = {
+                    'totalCheckIns': 0,
+                    'streakFreezes': 0,
+                    'freezesUsed': 0,
+                    'lastFreezeEarned': None,
+                    'streakMilestones': [],
+                    'weeklyCheckIns': 0,
+                    'weekStartDate': None,
+                }
+                for key, default_val in defaults.items():
+                    if key not in item:
+                        item[key] = default_val
+                        needs_save = True
+
+                # Persist the filled-in defaults so they aren't lost
+                if needs_save:
+                    self.table.put_item(Item=_clean_for_dynamo({
+                        **{k: v for k, v in item.items()},
+                    }))
+
                 return item
         except Exception as e:
             print(f"Error ensuring streak exists: {str(e)}")
@@ -212,12 +247,12 @@ class GamificationService:
         """Log when a freeze was used"""
         now = datetime.now(timezone.utc)
         self.table.put_item(
-            Item={
+            Item=_clean_for_dynamo({
                 'userId': user_id,
                 'dataType': f"{DATA_TYPE_FREEZE_LOG}#{now.strftime('%Y-%m-%d')}",
                 'usedAt': now.isoformat(),
                 'streakSaved': streak_saved
-            }
+            })
         )
 
     def check_in(self, user_id: str, goal_id: Optional[str] = None, notes: Optional[str] = None) -> Dict:
@@ -257,9 +292,6 @@ class GamificationService:
                     last_date = last_check_in.date()
                     days_diff = (today - last_date).days
 
-                    # Check grace period
-                    in_grace_period = self._is_within_grace_period(now, last_check_in)
-
                     if days_diff == 0:
                         # Already checked in today
                         return {
@@ -269,20 +301,19 @@ class GamificationService:
                             'longestStreak': int(streak_data.get('longestStreak', 0)),
                             'totalCheckIns': int(streak_data.get('totalCheckIns', 0)),
                             'streakFreezes': int(streak_data.get('streakFreezes', 0)),
+                            'weeklyCheckIns': int(streak_data.get('weeklyCheckIns', 0)),
                             'newBadges': [],
                             'alreadyCheckedIn': True,
                             'freezeUsed': False,
                             'milestoneReached': None,
-                            'freezeEarned': False
+                            'freezeEarned': False,
+                            'xp': {'xpAwarded': 0}
                         }
-                    elif days_diff == 1 or (days_diff == 1 and in_grace_period):
+                    elif days_diff == 1:
                         # Consecutive day - increment streak
                         streak_data['currentStreak'] = int(streak_data.get('currentStreak', 0)) + 1
-                    elif days_diff == 2 and in_grace_period:
-                        # Within grace period, treat as consecutive
-                        streak_data['currentStreak'] = int(streak_data.get('currentStreak', 0)) + 1
-                    elif days_diff > 1:
-                        # Streak would be broken - try to use freeze
+                    elif days_diff == 2:
+                        # Missed exactly 1 day - try to use a freeze
                         current_freezes = int(streak_data.get('streakFreezes', 0))
                         current_streak = int(streak_data.get('currentStreak', 0))
 
@@ -294,9 +325,10 @@ class GamificationService:
                             freeze_used = True
                             self._log_freeze_usage(user_id, current_streak)
                         else:
-                            # Streak broken - reset to 1
+                            # No freeze available - streak broken
                             streak_data['currentStreak'] = 1
                     else:
+                        # Missed 2+ days - streak is broken regardless of freezes
                         streak_data['currentStreak'] = 1
 
                 except Exception as parse_error:
@@ -356,7 +388,7 @@ class GamificationService:
 
             # Save updated streak
             self.table.put_item(
-                Item={
+                Item=_clean_for_dynamo({
                     'userId': user_id,
                     'dataType': DATA_TYPE_STREAK,
                     'currentStreak': streak_data['currentStreak'],
@@ -369,7 +401,7 @@ class GamificationService:
                     'streakMilestones': streak_data.get('streakMilestones', []),
                     'weeklyCheckIns': streak_data.get('weeklyCheckIns', 0),
                     'weekStartDate': streak_data.get('weekStartDate')
-                }
+                })
             )
 
             # Check for new badges
@@ -394,11 +426,11 @@ class GamificationService:
             return {
                 'success': True,
                 'message': message,
-                'currentStreak': streak_data['currentStreak'],
-                'longestStreak': streak_data['longestStreak'],
-                'totalCheckIns': streak_data['totalCheckIns'],
-                'streakFreezes': streak_data.get('streakFreezes', 0),
-                'weeklyCheckIns': streak_data.get('weeklyCheckIns', 0),
+                'currentStreak': int(streak_data['currentStreak']),
+                'longestStreak': int(streak_data['longestStreak']),
+                'totalCheckIns': int(streak_data['totalCheckIns']),
+                'streakFreezes': int(streak_data.get('streakFreezes', 0)),
+                'weeklyCheckIns': int(streak_data.get('weeklyCheckIns', 0)),
                 'newBadges': new_badges,
                 'alreadyCheckedIn': False,
                 'freezeUsed': freeze_used,
@@ -449,12 +481,12 @@ class GamificationService:
                     elif days_diff == 1:
                         streak_active = True
                         streak_at_risk = True  # Haven't checked in today yet
-                    elif days_diff > 1 and has_freeze_protection:
-                        # Streak would be at risk but freeze available
+                    elif days_diff == 2 and has_freeze_protection:
+                        # Missed 1 day but freeze can save it
                         streak_active = True
                         streak_at_risk = True
                     else:
-                        # Streak is broken
+                        # Missed 2+ days or no freeze - streak is broken
                         current_streak = 0
                         streak_active = False
 
@@ -479,20 +511,20 @@ class GamificationService:
             days_until_freeze = 7 - (current_streak % 7) if current_streak % 7 != 0 else 7
 
             return {
-                'currentStreak': current_streak,
-                'longestStreak': longest_streak,
+                'currentStreak': int(current_streak),
+                'longestStreak': int(longest_streak),
                 'lastCheckIn': last_check_in_str,
-                'totalCheckIns': total_check_ins,
+                'totalCheckIns': int(total_check_ins),
                 'streakActive': streak_active,
                 'checkedInToday': checked_in_today,
                 'streakAtRisk': streak_at_risk,
-                'streakFreezes': streak_freezes,
+                'streakFreezes': int(streak_freezes),
                 'hasFreezeProtection': has_freeze_protection,
-                'weeklyCheckIns': weekly_check_ins,
-                'achievedMilestones': streak_milestones,
+                'weeklyCheckIns': int(weekly_check_ins),
+                'achievedMilestones': [int(m) for m in streak_milestones] if streak_milestones else [],
                 'nextMilestone': next_milestone,
-                'daysToNextMilestone': days_to_next_milestone,
-                'daysUntilFreeze': days_until_freeze
+                'daysToNextMilestone': int(days_to_next_milestone) if days_to_next_milestone is not None else None,
+                'daysUntilFreeze': int(days_until_freeze)
             }
         except Exception as e:
             raise HTTPException(
@@ -510,20 +542,20 @@ class GamificationService:
             milestones = []
             for milestone_days in STREAK_MILESTONES:
                 milestone_info = MILESTONE_INFO[milestone_days]
-                achieved = milestone_days in achieved_milestones
-                progress = min(100, round((current_streak / milestone_days) * 100, 1))
+                achieved = milestone_days in [int(m) for m in achieved_milestones]
+                progress = min(100, round((int(current_streak) / milestone_days) * 100, 1))
 
                 milestones.append({
                     'days': milestone_days,
                     'name': milestone_info['name'],
                     'xp': milestone_info['xp'],
                     'achieved': achieved,
-                    'progress': progress if not achieved else 100,
-                    'daysRemaining': max(0, milestone_days - current_streak)
+                    'progress': float(progress) if not achieved else 100,
+                    'daysRemaining': max(0, milestone_days - int(current_streak))
                 })
 
             return {
-                'currentStreak': current_streak,
+                'currentStreak': int(current_streak),
                 'milestones': milestones
             }
         except Exception as e:
@@ -576,7 +608,6 @@ class GamificationService:
         """Award a badge for completing an activity"""
         badge_map = {
             'first_analysis': 'health_explorer',
-            'first_location': 'location_scout',
             'first_goal': 'goal_setter',
             'first_goal_complete': 'goal_achiever'
         }
@@ -616,7 +647,7 @@ class GamificationService:
         """Award a badge to a user"""
         try:
             self.table.put_item(
-                Item={
+                Item=_clean_for_dynamo({
                     'userId': user_id,
                     'dataType': f"{DATA_TYPE_BADGE}#{badge_id}",
                     'badgeId': badge_id,
@@ -624,7 +655,7 @@ class GamificationService:
                     'description': badge_info['description'],
                     'icon': badge_info['icon'],
                     'earnedAt': datetime.now(timezone.utc).isoformat()
-                }
+                })
             )
         except Exception as e:
             print(f"Error awarding badge: {str(e)}")
@@ -640,7 +671,17 @@ class GamificationService:
                 }
             )
 
-            return response.get('Items', [])
+            # Clean up badge items for JSON response
+            badges = []
+            for item in response.get('Items', []):
+                badges.append({
+                    'badgeId': item.get('badgeId', ''),
+                    'name': item.get('name', ''),
+                    'description': item.get('description', ''),
+                    'icon': item.get('icon', ''),
+                    'earnedAt': item.get('earnedAt', ''),
+                })
+            return badges
         except Exception as e:
             raise HTTPException(
                 status_code=500,
@@ -654,7 +695,7 @@ class GamificationService:
 
         try:
             self.table.put_item(
-                Item={
+                Item=_clean_for_dynamo({
                     'userId': user_id,
                     'dataType': f"{DATA_TYPE_GOAL}#{goal_id}",
                     'goalId': goal_id,
@@ -666,7 +707,7 @@ class GamificationService:
                     'createdAt': timestamp,
                     'completedAt': '',
                     'lastProgressUpdate': None
-                }
+                })
             )
 
             # Award first goal badge
@@ -744,11 +785,11 @@ class GamificationService:
                 self.award_activity_badge(user_id, 'first_goal_complete')
 
             # Save updated goal
-            self.table.put_item(Item={
+            self.table.put_item(Item=_clean_for_dynamo({
                 'userId': user_id,
                 'dataType': f"{DATA_TYPE_GOAL}#{goal_id}",
                 **{k: v for k, v in goal.items() if k not in ['userId', 'dataType']}
-            })
+            }))
 
             # Award XP for goal progress
             xp_result = self.award_xp(user_id, 'complete_goal_day')
@@ -764,7 +805,7 @@ class GamificationService:
             return {
                 'success': True,
                 'message': 'Goal completed!' if completed else 'Progress updated!',
-                'currentDays': goal['currentDays'],
+                'currentDays': int(goal['currentDays']),
                 'targetDays': int(goal['targetDays']),
                 'completed': goal.get('completed', False),
                 'newlyCompleted': completed,
@@ -809,11 +850,18 @@ class GamificationService:
             # Convert numeric fields and add calculated fields
             goals = []
             for goal in response.get('Items', []):
+                current_days = int(goal.get('currentDays', 0))
+                target_days = int(goal.get('targetDays', 1))
                 processed_goal = {
-                    **goal,
-                    'currentDays': int(goal.get('currentDays', 0)),
-                    'targetDays': int(goal.get('targetDays', 0)),
-                    'progress': round((int(goal.get('currentDays', 0)) / max(int(goal.get('targetDays', 1)), 1)) * 100, 1)
+                    'goalId': goal.get('goalId', ''),
+                    'title': goal.get('title', ''),
+                    'description': goal.get('description', ''),
+                    'currentDays': current_days,
+                    'targetDays': target_days,
+                    'completed': goal.get('completed', False),
+                    'createdAt': goal.get('createdAt', ''),
+                    'completedAt': goal.get('completedAt', ''),
+                    'progress': float(round((current_days / max(target_days, 1)) * 100, 1))
                 }
                 goals.append(processed_goal)
 
@@ -864,7 +912,7 @@ class GamificationService:
                     'comboActions': 0,
                     'xpHistory': []
                 }
-                self.table.put_item(Item=xp_data)
+                self.table.put_item(Item=_clean_for_dynamo(xp_data))
                 return xp_data
             else:
                 item = response['Item']
@@ -970,7 +1018,7 @@ class GamificationService:
 
             # Save updated XP data
             self.table.put_item(
-                Item={
+                Item=_clean_for_dynamo({
                     'userId': user_id,
                     'dataType': DATA_TYPE_XP,
                     'totalXP': xp_data['totalXP'],
@@ -984,22 +1032,22 @@ class GamificationService:
                     'comboMultiplier': xp_data['comboMultiplier'],
                     'comboActions': xp_data['comboActions'],
                     'xpHistory': xp_data['xpHistory']
-                }
+                })
             )
 
             return {
                 'success': True,
-                'xpAwarded': final_xp,
-                'baseXP': base_amount,
-                'multiplier': multiplier,
-                'totalXP': xp_data['totalXP'],
-                'currentLevel': xp_data['currentLevel'],
-                'xpProgress': xp_data['xpProgress'],
-                'xpToNextLevel': xp_data['xpToNextLevel'],
+                'xpAwarded': int(final_xp),
+                'baseXP': int(base_amount),
+                'multiplier': float(multiplier),
+                'totalXP': int(xp_data['totalXP']),
+                'currentLevel': int(xp_data['currentLevel']),
+                'xpProgress': int(xp_data['xpProgress']),
+                'xpToNextLevel': int(xp_data['xpToNextLevel']),
                 'levelUp': level_up,
                 'newLevel': new_level if level_up else None,
-                'comboActions': xp_data['comboActions'],
-                'comboMultiplier': multiplier
+                'comboActions': int(xp_data['comboActions']),
+                'comboMultiplier': float(multiplier)
             }
 
         except Exception as e:
@@ -1030,16 +1078,16 @@ class GamificationService:
             xp_for_next = get_xp_for_level(current_level + 1)
 
             return {
-                'totalXP': total_xp,
-                'currentLevel': current_level,
-                'xpProgress': total_xp - xp_for_current,
-                'xpToNextLevel': xp_for_next - xp_for_current,
-                'progressPercent': round(((total_xp - xp_for_current) / max(xp_for_next - xp_for_current, 1)) * 100, 1),
+                'totalXP': int(total_xp),
+                'currentLevel': int(current_level),
+                'xpProgress': int(total_xp - xp_for_current),
+                'xpToNextLevel': int(xp_for_next - xp_for_current),
+                'progressPercent': float(round(((total_xp - xp_for_current) / max(xp_for_next - xp_for_current, 1)) * 100, 1)),
                 'weeklyXP': int(xp_data.get('weeklyXP', 0)),
                 'todayXP': int(xp_data.get('todayXP', 0)),
                 'comboMultiplier': float(xp_data.get('comboMultiplier', 1.0)),
                 'comboActions': int(xp_data.get('comboActions', 0)),
-                'nextComboMultiplier': COMBO_MULTIPLIERS.get(min(int(xp_data.get('comboActions', 0)) + 1, 5), 2.0)
+                'nextComboMultiplier': float(COMBO_MULTIPLIERS.get(min(int(xp_data.get('comboActions', 0)) + 1, 5), 2.0))
             }
 
         except Exception as e:
@@ -1062,13 +1110,16 @@ class GamificationService:
             xp_history = sorted(xp_history, key=lambda x: x.get('date', ''), reverse=True)
 
             # Calculate 7-day average
-            total_7_days = sum(h.get('xp', 0) for h in xp_history[:7])
+            total_7_days = sum(int(h.get('xp', 0)) for h in xp_history[:7])
             avg_daily = round(total_7_days / max(len(xp_history[:7]), 1), 1)
 
+            # Ensure xp values in history are ints
+            clean_history = [{'date': h.get('date', ''), 'xp': int(h.get('xp', 0))} for h in xp_history]
+
             return {
-                'history': xp_history,
-                'totalLast7Days': total_7_days,
-                'averageDaily': avg_daily,
+                'history': clean_history,
+                'totalLast7Days': int(total_7_days),
+                'averageDaily': float(avg_daily),
                 'totalXP': int(xp_data.get('totalXP', 0)),
                 'currentLevel': int(xp_data.get('currentLevel', 1))
             }

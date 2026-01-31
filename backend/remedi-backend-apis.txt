@@ -1,0 +1,77 @@
+Attached is the yaml file that represents all the dynamodb tables for the application
+please find below the API routes and methods required for this project
+
+Could you please generate API gateway API for this and separate lambda functions (in python language) one for each of the methods under each of the routes and sub routes where the naming convention
+for the each lambda function would be 
+{routes separated by "-"}-{http method} 
+like 
+users-userid-preferences-post
+users-userid-activity-activityid-put
+users-userid-goals-post
+
+Remedi Mobile Application Backend APIs
+=======================================
+
+- /users
+	- post
+	- get
+	/{userid}
+		- put
+		- get
+		- delete
+		/ login
+			- post
+		/preferences
+			- post
+			- get
+			- put
+		/activity
+			- post
+			- get
+			/{activityid}
+				- get
+				- delete
+		/goals
+			- post
+			- get
+			- delete
+			/{goalid}
+				- put
+				- get
+				- delete
+		/rewards
+			- post
+			- get
+		/alerts
+			- post
+			- get
+			/{alertid}
+				- put
+				- get
+				- delete
+		/notifications
+			- post
+			- get
+			/{notificationid}
+				- get
+				- delete
+
+- /receipes
+	/search
+		- post
+	/scan
+		- post
+		
+
+- /refvalue
+	- post
+	- get
+	/{refvalueid}
+		- get
+		- put
+		- delete
+
+
+
+
+
