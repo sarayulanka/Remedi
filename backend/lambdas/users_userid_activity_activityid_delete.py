@@ -30,10 +30,10 @@ def lambda_handler(event, context):
 
         # Extract path parameters
         path_params = event.get('pathParameters') or {}
-        email = path_params.get('userid')
+        user_id = path_params.get('userid')
         activity_id = path_params.get('activityid')
 
-        if not email:
+        if not user_id:
             return respond(400, {'error': 'Missing userid in path parameters'})
         if not activity_id:
             return respond(400, {'error': 'Missing activityid in path parameters'})
@@ -41,7 +41,7 @@ def lambda_handler(event, context):
         # First check if the item exists
         get_response = table.get_item(
             Key={
-                'email': email,
+                'user_id': user_id,
                 'timestamp': activity_id
             }
         )
@@ -49,21 +49,21 @@ def lambda_handler(event, context):
         if not get_response.get('Item'):
             return respond(404, {
                 'error': 'Activity not found',
-                'email': email,
+                'user_id': user_id,
                 'activityid': activity_id
             })
 
         # Delete the item
         table.delete_item(
             Key={
-                'email': email,
+                'user_id': user_id,
                 'timestamp': activity_id
             }
         )
 
         return respond(200, {
             'message': 'Activity deleted successfully',
-            'email': email,
+            'user_id': user_id,
             'activityid': activity_id
         })
 

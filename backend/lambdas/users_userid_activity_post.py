@@ -30,10 +30,10 @@ def lambda_handler(event, context):
         if event.get('httpMethod') == 'OPTIONS':
             return respond(200, {'message': 'OK'})
 
-        # Extract userid (email) from path parameters
+        # Extract user_id from path parameters
         path_params = event.get('pathParameters') or {}
-        email = path_params.get('userid')
-        if not email:
+        user_id = path_params.get('userid')
+        if not user_id:
             return respond(400, {'error': 'Missing userid in path parameters'})
 
         # Parse request body
@@ -66,7 +66,7 @@ def lambda_handler(event, context):
 
         # Build item
         item = {
-            'email': email,
+            'user_id': user_id,
             'timestamp': timestamp,
             'activity_date': activity_date,
             'api_endpoint': api_endpoint,

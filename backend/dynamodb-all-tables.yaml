@@ -18,14 +18,6 @@ Parameters:
     Type: Number
     Default: 365
 
-  NotificationTTLDays:
-    Type: Number
-    Default: 90
-
-  AlertTTLDays:
-    Type: Number
-    Default: 180
-
 # ============================================================================
 # RESOURCES
 # ============================================================================
@@ -536,135 +528,6 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
-  # ==========================================================================
-  # TABLE 8 — NOTIFICATIONS
-  # ==========================================================================
-  #
-  # ┌────────────┬──────────────────────────────┬──────────────────────────┐
-  # │ PK (email) │ SK (created_at)              │ Example attributes       │
-  # ├────────────┼──────────────────────────────┼──────────────────────────┤
-  # │ jane@…     │ 2026-01-31T09:00:00.000Z     │ type, message_text, …   │
-  # └────────────┴──────────────────────────────┴──────────────────────────┘
-  #
-  # Access Patterns:
-  #   1. Latest notifications       → Query: PK=email, ScanIndexForward=false
-  #   2. Unread notifications       → Query GSI1: PK=email, SK begins_with "UNREAD#"
-  # ==========================================================================
-  NotificationsTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub 'remedi-notifications'
-      BillingMode: PAY_PER_REQUEST
-      PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: true
-
-      AttributeDefinitions:
-        - AttributeName: email
-          AttributeType: S
-        - AttributeName: created_at
-          AttributeType: S
-        - AttributeName: read_status_created_at
-          AttributeType: S
-
-      KeySchema:
-        - AttributeName: email
-          KeyType: HASH
-        - AttributeName: created_at
-          KeyType: RANGE
-
-      GlobalSecondaryIndexes:
-        - IndexName: gsi-email-read-status
-          KeySchema:
-            - AttributeName: email
-              KeyType: HASH
-            - AttributeName: read_status_created_at
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-
-      TimeToLiveSpecification:
-        AttributeName: ttl_expiry
-        Enabled: true
-
-      Tags:
-        - Key: Application
-          Value: Remedi
-        - Key: Environment
-          Value: !Ref Environment
-
-  # ==========================================================================
-  # TABLE 9 — ALERTS
-  # ==========================================================================
-  #
-  # ┌────────────┬──────────────────────────────┬──────────────────────────┐
-  # │ PK (email) │ SK (alert_date_id)           │ Example attributes       │
-  # ├────────────┼──────────────────────────────┼──────────────────────────┤
-  # │ jane@…     │ 2026-01-31#c3d4e5f6          │ condition, severity, …   │
-  # └────────────┴──────────────────────────────┴──────────────────────────┘
-  #
-  # Access Patterns:
-  #   1. All alerts for user        → Query: PK=email
-  #   2. Alerts on a date           → Query: PK=email, SK begins_with "2026-01-31"
-  #   3. Alerts by condition        → Query GSI1: PK=email, SK begins_with "STREAK_RISK#"
-  #   4. System-wide by condition   → Query GSI2: PK=condition
-  # ==========================================================================
-  AlertsTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub 'remedi-alerts'
-      BillingMode: PAY_PER_REQUEST
-      PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: true
-
-      AttributeDefinitions:
-        - AttributeName: email
-          AttributeType: S
-        - AttributeName: alert_date_id
-          AttributeType: S
-        - AttributeName: condition_alert_date
-          AttributeType: S
-        - AttributeName: condition
-          AttributeType: S
-
-      KeySchema:
-        - AttributeName: email
-          KeyType: HASH
-        - AttributeName: alert_date_id
-          KeyType: RANGE
-
-      GlobalSecondaryIndexes:
-        - IndexName: gsi-email-condition
-          KeySchema:
-            - AttributeName: email
-              KeyType: HASH
-            - AttributeName: condition_alert_date
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-
-        - IndexName: gsi-condition-date
-          KeySchema:
-            - AttributeName: condition
-              KeyType: HASH
-            - AttributeName: alert_date_id
-              KeyType: RANGE
-          Projection:
-            ProjectionType: INCLUDE
-            NonKeyAttributes:
-              - email
-              - severity
-              - is_acknowledged
-
-      TimeToLiveSpecification:
-        AttributeName: ttl_expiry
-        Enabled: true
-
-      Tags:
-        - Key: Application
-          Value: Remedi
-        - Key: Environment
-          Value: !Ref Environment
-
 # ============================================================================
 # OUTPUTS
 # ============================================================================
@@ -717,17 +580,3 @@ Outputs:
   UserActivityTableArn:
     Value: !GetAtt UserActivityTable.Arn
     Export: { Name: !Sub '${Environment}-UserActivityTableArn' }
-
-  NotificationsTableName:
-    Value: !Ref NotificationsTable
-    Export: { Name: !Sub '${Environment}-NotificationsTableName' }
-  NotificationsTableArn:
-    Value: !GetAtt NotificationsTable.Arn
-    Export: { Name: !Sub '${Environment}-NotificationsTableArn' }
-
-  AlertsTableName:
-    Value: !Ref AlertsTable
-    Export: { Name: !Sub '${Environment}-AlertsTableName' }
-  AlertsTableArn:
-    Value: !GetAtt AlertsTable.Arn
-    Export: { Name: !Sub '${Environment}-AlertsTableArn' }

@@ -25,8 +25,8 @@ def respond(status_code, body):
 
 def lambda_handler(event, context):
     try:
-        # Extract userid (email) from path parameters
-        userid = event['pathParameters']['userid']
+        # Extract user_id from path parameters
+        user_id = event['pathParameters']['userid']
 
         # Check for optional status query parameter
         query_params = event.get('queryStringParameters') or {}
@@ -42,11 +42,11 @@ def lambda_handler(event, context):
         goals = []
 
         if status_filter:
-            # Query GSI gsi-email-status with begins_with on sort key
+            # Query GSI gsi-user-status with begins_with on sort key
             response = table.query(
-                IndexName='gsi-email-status',
+                IndexName='gsi-user-status',
                 KeyConditionExpression=(
-                    Key('email').eq(userid) &
+                    Key('user_id').eq(user_id) &
                     Key('status_created_at').begins_with(f"{status_filter}#")
                 )
             )
@@ -55,9 +55,9 @@ def lambda_handler(event, context):
             # Handle pagination
             while 'LastEvaluatedKey' in response:
                 response = table.query(
-                    IndexName='gsi-email-status',
+                    IndexName='gsi-user-status',
                     KeyConditionExpression=(
-                        Key('email').eq(userid) &
+                        Key('user_id').eq(user_id) &
                         Key('status_created_at').begins_with(f"{status_filter}#")
                     ),
                     ExclusiveStartKey=response['LastEvaluatedKey']
@@ -66,14 +66,14 @@ def lambda_handler(event, context):
         else:
             # Query base table with just partition key
             response = table.query(
-                KeyConditionExpression=Key('email').eq(userid)
+                KeyConditionExpression=Key('user_id').eq(user_id)
             )
             goals = response.get('Items', [])
 
             # Handle pagination
             while 'LastEvaluatedKey' in response:
                 response = table.query(
-                    KeyConditionExpression=Key('email').eq(userid),
+                    KeyConditionExpression=Key('user_id').eq(user_id),
                     ExclusiveStartKey=response['LastEvaluatedKey']
                 )
                 goals.extend(response.get('Items', []))

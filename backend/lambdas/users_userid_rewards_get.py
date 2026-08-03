@@ -32,10 +32,10 @@ def lambda_handler(event, context):
         table_name = os.environ.get('REWARDS_TABLE', 'remedi-rewards')
         table = dynamodb.Table(table_name)
 
-        # Extract userid (email) from path parameters
+        # Extract user_id from path parameters
         path_params = event.get('pathParameters') or {}
-        email = path_params.get('userid')
-        if not email:
+        user_id = path_params.get('userid')
+        if not user_id:
             return respond(400, {'error': 'Missing userid in path parameters'})
 
         # Parse optional query parameters
@@ -49,7 +49,7 @@ def lambda_handler(event, context):
             # Date range query using sort key boundaries
             # Tilde (~) sorts after all UUID characters in ASCII
             response = table.query(
-                KeyConditionExpression=Key('email').eq(email) & Key('date_reward_id').between(
+                KeyConditionExpression=Key('user_id').eq(user_id) & Key('date_reward_id').between(
                     f"{start_date}#",
                     f"{end_date}#~"
                 ),
@@ -59,7 +59,7 @@ def lambda_handler(event, context):
         elif start_date:
             # Only start_date: from start_date onwards
             response = table.query(
-                KeyConditionExpression=Key('email').eq(email) & Key('date_reward_id').gte(
+                KeyConditionExpression=Key('user_id').eq(user_id) & Key('date_reward_id').gte(
                     f"{start_date}#"
                 ),
                 ScanIndexForward=False,
@@ -68,7 +68,7 @@ def lambda_handler(event, context):
         elif end_date:
             # Only end_date: up to end_date
             response = table.query(
-                KeyConditionExpression=Key('email').eq(email) & Key('date_reward_id').lte(
+                KeyConditionExpression=Key('user_id').eq(user_id) & Key('date_reward_id').lte(
                     f"{end_date}#~"
                 ),
                 ScanIndexForward=False,
@@ -77,7 +77,7 @@ def lambda_handler(event, context):
         else:
             # No date filter: newest first
             response = table.query(
-                KeyConditionExpression=Key('email').eq(email),
+                KeyConditionExpression=Key('user_id').eq(user_id),
                 ScanIndexForward=False,
                 Limit=limit
             )

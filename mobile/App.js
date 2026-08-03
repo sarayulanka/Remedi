@@ -82,6 +82,7 @@ function MainTabs({ navigation }) {
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem('authToken');
+      await AsyncStorage.removeItem('userEmail');
       await AsyncStorage.removeItem('username');
       // Use getParent() to access the Stack Navigator from within Tab Navigator
       const parentNav = navigation.getParent();

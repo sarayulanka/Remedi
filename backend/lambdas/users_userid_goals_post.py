@@ -25,8 +25,8 @@ def respond(status_code, body):
 
 def lambda_handler(event, context):
     try:
-        # Extract userid (email) from path parameters
-        userid = event['pathParameters']['userid']
+        # Extract user_id from path parameters
+        user_id = event['pathParameters']['userid']
 
         # Parse request body
         body = json.loads(event.get('body', '{}') or '{}')
@@ -58,7 +58,7 @@ def lambda_handler(event, context):
 
         # Build the goal item
         item = {
-            'email': userid,
+            'user_id': user_id,
             'goal_id': goal_id,
             'title': title,
             'description': body.get('description', ''),
@@ -70,7 +70,7 @@ def lambda_handler(event, context):
             'end_date': end_date,
             'created_at': created_at,
             'updated_at': updated_at,
-            'last_progress_date': None
+            'last_progress_date': ''
         }
 
         # Write to DynamoDB

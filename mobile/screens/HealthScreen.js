@@ -342,9 +342,8 @@ const HealthScreen = () => {
     const fetchUserPreferences = async () => {
       try {
         const profile = await authAPI.getProfile();
-        const prefs = profile.dietaryPreferences || {};
-        setUserAllergies(prefs.allergies || profile.allergies || []);
-        setUserDietType(prefs.dietType || profile.dietType || '');
+        setUserAllergies(profile.food_allergies || profile.allergies || []);
+        setUserDietType(profile.diet_type || profile.dietType || '');
       } catch (error) {
         console.log('Could not fetch user preferences:', error);
       }
@@ -420,21 +419,6 @@ const HealthScreen = () => {
     }
   };
 
-  const saveRemedy = async () => {
-    if (!analysis) return;
-
-    try {
-      await healthAPI.saveRemedy({
-        condition: analysis.condition.name,
-        conditionExplanation: analysis.condition.explanation,
-        remedy: analysis.remedy,
-        imageUrl: image?.uri,
-      });
-      Alert.alert('Saved!', 'Remedy saved to your collection');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to save remedy');
-    }
-  };
 
   const resetForm = () => {
     setImage(null);
@@ -688,12 +672,18 @@ const HealthScreen = () => {
                   {selectedRecipe.ingredients.map((ing, idx) => (
                     <View key={idx} style={styles.ingredientItem}>
                       <View style={styles.ingredientBullet} />
-                      <Text style={styles.ingredientText}>
-                        <Text style={styles.ingredientAmount}>
-                          {ing.amount}{ing.unit ? ` ${ing.unit}` : ''}{' '}
+                      {typeof ing === 'string' ? (
+                        <Text style={styles.ingredientText}>
+                          <Text style={styles.ingredientName}>{ing}</Text>
                         </Text>
-                        <Text style={styles.ingredientName}>{ing.name}</Text>
-                      </Text>
+                      ) : (
+                        <Text style={styles.ingredientText}>
+                          <Text style={styles.ingredientAmount}>
+                            {ing.amount}{ing.unit ? ` ${ing.unit}` : ''}{' '}
+                          </Text>
+                          <Text style={styles.ingredientName}>{ing.name}</Text>
+                        </Text>
+                      )}
                     </View>
                   ))}
                 </View>
@@ -709,7 +699,7 @@ const HealthScreen = () => {
               <View style={styles.recipeModalDirectionsContent}>
                 {/* Instructions as array (from TheMealDB) */}
                 {selectedRecipe?.instructions && Array.isArray(selectedRecipe.instructions) ? (
-                  selectedRecipe.instructions.map((step, idx) => (
+                  selectedRecipe.instructions.filter(step => step && step.trim()).map((step, idx) => (
                     <View key={idx} style={styles.recipeStepItem}>
                       <View style={styles.recipeStepNumber}>
                         <Text style={styles.recipeStepNumberText}>{idx + 1}</Text>
@@ -1185,19 +1175,6 @@ const HealthScreen = () => {
 
             {/* Action Buttons */}
             <View style={styles.actionButtons}>
-              <TouchableOpacity
-                style={styles.saveButton}
-                onPress={saveRemedy}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={gradients.success}
-                  style={styles.saveButtonGradient}
-                >
-                  <Text style={styles.saveButtonText}>Save Remedy</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-
               <TouchableOpacity
                 style={styles.newAnalysisButton}
                 onPress={resetForm}
@@ -1823,20 +1800,6 @@ const styles = StyleSheet.create({
   actionButtons: {
     gap: spacing.sm,
     marginBottom: spacing.xl,
-  },
-  saveButton: {
-    borderRadius: borderRadius.lg,
-    overflow: 'hidden',
-    ...shadows.md,
-  },
-  saveButtonGradient: {
-    paddingVertical: spacing.base,
-    alignItems: 'center',
-  },
-  saveButtonText: {
-    fontSize: typography.base,
-    fontWeight: '700',
-    color: colors.white,
   },
   newAnalysisButton: {
     backgroundColor: colors.white,

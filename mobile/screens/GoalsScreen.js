@@ -197,7 +197,7 @@ const GoalsScreen = () => {
       }
       loadData();
     } catch (error) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to update progress');
+      Alert.alert('Error', error.response?.data?.error || 'Failed to update progress');
     }
   };
 

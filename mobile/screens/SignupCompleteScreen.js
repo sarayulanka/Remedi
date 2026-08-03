@@ -34,30 +34,28 @@ const SignupCompleteScreen = ({ route, navigation }) => {
         dietType,
       } = route.params;
 
-      // Prepare signup data
+      // Prepare signup data with snake_case keys for API Gateway
       const signupData = {
         username,
         email,
         password,
         fullName: fullName || '',
-        age: age || 0,
-        gender: gender || '',
-        location: location || '',
-        nutritionGoals: nutritionGoals || [],
-        healthConditions: healthConditions || [],
-        allergies: allergies || [],
-        dietType: dietType || '',
+        first_name: (fullName || '').split(' ')[0] || '',
+        last_name: (fullName || '').split(' ').slice(1).join(' ') || '',
+        nutrition_goals: nutritionGoals || [],
+        food_allergies: allergies || [],
+        diet_type: dietType || '',
       };
 
-      // Call signup API
+      // Call signup API (creates user + logs in, returns token)
       const response = await authAPI.signup(signupData);
 
-      // Store auth token
-      await AsyncStorage.setItem('authToken', response.access_token);
-      await AsyncStorage.setItem('userId', response.userId);
+      // Store auth token and user_id
+      await AsyncStorage.setItem('authToken', response.token);
+      await AsyncStorage.setItem('userId', response.user_id);
+      await AsyncStorage.setItem('userEmail', response.email);
       await AsyncStorage.setItem('username', response.username);
 
-      // Dietary preferences are now included in signup data
       console.log('Signup successful:', response);
 
       // Success! Navigate to main app
@@ -72,7 +70,7 @@ const SignupCompleteScreen = ({ route, navigation }) => {
       setIsLoading(false);
       Alert.alert(
         'Signup Failed',
-        error.response?.data?.detail || 'An error occurred during signup',
+        error.response?.data?.error || 'An error occurred during signup',
         [
           {
             text: 'Try Again',

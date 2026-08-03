@@ -31,10 +31,10 @@ def lambda_handler(event, context):
         if event.get('httpMethod') == 'OPTIONS':
             return respond(200, {'message': 'OK'})
 
-        # Extract userid (email) from path parameters
+        # Extract user_id from path parameters
         path_params = event.get('pathParameters') or {}
-        email = path_params.get('userid')
-        if not email:
+        user_id = path_params.get('userid')
+        if not user_id:
             return respond(400, {'error': 'Missing userid in path parameters'})
 
         # Parse query parameters
@@ -69,7 +69,7 @@ def lambda_handler(event, context):
                 return respond(400, {'error': 'Invalid date format. Use ISO 8601 or YYYY-MM-DD'})
 
             query_kwargs['KeyConditionExpression'] = (
-                Key('email').eq(email) &
+                Key('user_id').eq(user_id) &
                 Key('timestamp').between(start_date, end_date)
             )
             # When filtering by date range, return in chronological order
@@ -80,7 +80,7 @@ def lambda_handler(event, context):
                 start_date = f"{start_date}T00:00:00+00:00"
 
             query_kwargs['KeyConditionExpression'] = (
-                Key('email').eq(email) &
+                Key('user_id').eq(user_id) &
                 Key('timestamp').gte(start_date)
             )
             query_kwargs['ScanIndexForward'] = True
@@ -90,13 +90,13 @@ def lambda_handler(event, context):
                 end_date = f"{end_date}T23:59:59.999999+00:00"
 
             query_kwargs['KeyConditionExpression'] = (
-                Key('email').eq(email) &
+                Key('user_id').eq(user_id) &
                 Key('timestamp').lte(end_date)
             )
             query_kwargs['ScanIndexForward'] = False
         else:
             # No date filters: return newest first
-            query_kwargs['KeyConditionExpression'] = Key('email').eq(email)
+            query_kwargs['KeyConditionExpression'] = Key('user_id').eq(user_id)
             query_kwargs['ScanIndexForward'] = False
 
         # Execute query
@@ -104,7 +104,7 @@ def lambda_handler(event, context):
         items = response.get('Items', [])
 
         result = {
-            'email': email,
+            'user_id': user_id,
             'count': len(items),
             'activities': items
         }

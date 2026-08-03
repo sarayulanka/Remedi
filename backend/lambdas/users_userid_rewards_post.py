@@ -33,10 +33,10 @@ def lambda_handler(event, context):
         table_name = os.environ.get('REWARDS_TABLE', 'remedi-rewards')
         table = dynamodb.Table(table_name)
 
-        # Extract userid (email) from path parameters
+        # Extract user_id from path parameters
         path_params = event.get('pathParameters') or {}
-        email = path_params.get('userid')
-        if not email:
+        user_id = path_params.get('userid')
+        if not user_id:
             return respond(400, {'error': 'Missing userid in path parameters'})
 
         # Parse request body
@@ -47,14 +47,12 @@ def lambda_handler(event, context):
         if isinstance(body, str):
             body = json.loads(body)
 
-        # Validate required fields
+        # Determine type: badge reward or saved remedy
         badge_id = body.get('badge_id')
-        if not badge_id:
-            return respond(400, {'error': 'badge_id is required'})
+        condition = body.get('condition')
 
-        # Optional fields
-        goal_id = body.get('goal_id')
-        notes = body.get('notes')
+        if not badge_id and not condition:
+            return respond(400, {'error': 'Either badge_id or condition is required'})
 
         # Generate identifiers
         reward_id = str(uuid.uuid4())
@@ -65,18 +63,29 @@ def lambda_handler(event, context):
 
         # Build item
         item = {
-            'email': email,
+            'user_id': user_id,
             'date_reward_id': date_reward_id,
             'reward_id': reward_id,
-            'badge_id': badge_id,
             'date_earned': date_earned,
             'created_at': created_at
         }
 
-        if goal_id:
-            item['goal_id'] = goal_id
-        if notes:
-            item['notes'] = notes
+        if badge_id:
+            item['reward_type'] = 'badge'
+            item['badge_id'] = badge_id
+            if body.get('goal_id'):
+                item['goal_id'] = body['goal_id']
+            if body.get('notes'):
+                item['notes'] = body['notes']
+        else:
+            item['reward_type'] = 'remedy'
+            item['condition'] = condition
+            if body.get('conditionExplanation'):
+                item['condition_explanation'] = body['conditionExplanation']
+            if body.get('remedy'):
+                item['remedy'] = body['remedy']
+            if body.get('imageUrl'):
+                item['image_url'] = body['imageUrl']
 
         # Write to DynamoDB
         table.put_item(Item=item)

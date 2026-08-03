@@ -24,14 +24,14 @@ def respond(status_code, body):
 
 def lambda_handler(event, context):
     try:
-        # Extract userid (email) and goalid from path parameters
-        userid = event['pathParameters']['userid']
+        # Extract user_id and goalid from path parameters
+        user_id = event['pathParameters']['userid']
         goalid = event['pathParameters']['goalid']
 
         # GetItem from DynamoDB
         response = table.get_item(
             Key={
-                'email': userid,
+                'user_id': user_id,
                 'goal_id': goalid
             }
         )
@@ -40,7 +40,7 @@ def lambda_handler(event, context):
 
         if not item:
             return respond(404, {
-                'error': f'Goal {goalid} not found for user {userid}'
+                'error': f'Goal {goalid} not found for user {user_id}'
             })
 
         return respond(200, item)

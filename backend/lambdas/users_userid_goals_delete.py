@@ -25,20 +25,20 @@ def respond(status_code, body):
 
 def lambda_handler(event, context):
     try:
-        # Extract userid (email) from path parameters
-        userid = event['pathParameters']['userid']
+        # Extract user_id from path parameters
+        user_id = event['pathParameters']['userid']
 
         # Query all goals for this user
         all_goals = []
         response = table.query(
-            KeyConditionExpression=Key('email').eq(userid)
+            KeyConditionExpression=Key('user_id').eq(user_id)
         )
         all_goals = response.get('Items', [])
 
         # Handle pagination
         while 'LastEvaluatedKey' in response:
             response = table.query(
-                KeyConditionExpression=Key('email').eq(userid),
+                KeyConditionExpression=Key('user_id').eq(user_id),
                 ExclusiveStartKey=response['LastEvaluatedKey']
             )
             all_goals.extend(response.get('Items', []))
@@ -59,7 +59,7 @@ def lambda_handler(event, context):
                 {
                     'DeleteRequest': {
                         'Key': {
-                            'email': goal['email'],
+                            'user_id': goal['user_id'],
                             'goal_id': goal['goal_id']
                         }
                     }
@@ -89,7 +89,7 @@ def lambda_handler(event, context):
             deleted_count += len(batch)
 
         return respond(200, {
-            'message': f'Successfully deleted all goals for user {userid}',
+            'message': f'Successfully deleted all goals for user {user_id}',
             'deleted_count': deleted_count
         })
 

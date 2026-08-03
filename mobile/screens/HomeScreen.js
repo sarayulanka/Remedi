@@ -188,7 +188,7 @@ const HomeScreen = ({ navigation }) => {
 
       loadUserData();
     } catch (error) {
-      Alert.alert('Oops!', error.response?.data?.detail || 'Check-in failed. Please try again.');
+      Alert.alert('Oops!', error.response?.data?.error || 'Check-in failed. Please try again.');
     }
   };
 

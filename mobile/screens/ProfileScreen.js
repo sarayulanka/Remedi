@@ -89,13 +89,13 @@ const ProfileScreen = ({ onLogout }) => {
       setStreak(streakData);
       setBadges(badgesData || []);
 
-      // Set editable values from profile or dietary preferences
-      const prefs = profileData.dietaryPreferences || {};
-      setSelectedGoals(prefs.preferences || profileData.nutritionGoals || []);
-      setHealthConditions(profileData.healthConditions || []);
+      // Map snake_case API fields to local state
+      const nutritionGoals = profileData.nutrition_goals || profileData.nutritionGoals || [];
+      setSelectedGoals(nutritionGoals);
+      setHealthConditions(profileData.healthConditions || profileData.health_conditions || []);
 
       // Handle allergies - separate predefined and custom
-      const allAllergies = prefs.allergies || profileData.allergies || [];
+      const allAllergies = profileData.food_allergies || profileData.allergies || [];
       const predefinedIds = ALLERGIES.map(a => a.id);
       const predefined = allAllergies.filter(a => predefinedIds.includes(a));
       const custom = allAllergies.filter(a => !predefinedIds.includes(a));
@@ -103,7 +103,7 @@ const ProfileScreen = ({ onLogout }) => {
       setCustomAllergy(custom.join(', '));
 
       // Handle diet type - check if it's predefined or custom
-      const dietValue = prefs.dietType || profileData.dietType || 'none';
+      const dietValue = profileData.diet_type || profileData.dietType || 'none';
       const predefinedDiets = DIET_TYPES.map(d => d.id);
       if (predefinedDiets.includes(dietValue)) {
         setSelectedDiet(dietValue);
@@ -193,6 +193,30 @@ const ProfileScreen = ({ onLogout }) => {
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Logout', style: 'destructive', onPress: onLogout },
+      ]
+    );
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'This will permanently delete your account and all associated data. This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await authAPI.deleteAccount();
+              Alert.alert('Account Deleted', 'Your account has been permanently deleted.');
+              onLogout();
+            } catch (error) {
+              console.error('Error deleting account:', error);
+              Alert.alert('Error', 'Failed to delete account. Please try again.');
+            }
+          },
+        },
       ]
     );
   };
@@ -484,6 +508,17 @@ const ProfileScreen = ({ onLogout }) => {
             <Ionicons name="log-out-outline" size={20} color={colors.error} />
             <Text style={styles.logoutText}>Logout</Text>
           </LinearGradient>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.deleteAccountButton}
+          onPress={handleDeleteAccount}
+          activeOpacity={0.7}
+        >
+          <View style={styles.deleteAccountInner}>
+            <Ionicons name="trash-outline" size={18} color={colors.error} />
+            <Text style={styles.deleteAccountText}>Delete Account</Text>
+          </View>
         </TouchableOpacity>
 
       </ScrollView>
@@ -825,6 +860,23 @@ const styles = StyleSheet.create({
     fontSize: typography.base,
     fontWeight: '700',
     color: colors.error,
+  },
+  deleteAccountButton: {
+    marginHorizontal: spacing['2xl'],
+    marginTop: spacing.sm,
+    marginBottom: spacing.lg,
+    alignItems: 'center',
+  },
+  deleteAccountInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+  },
+  deleteAccountText: {
+    fontSize: typography.sm,
+    color: colors.error,
+    fontWeight: '500',
   },
   // Modal styles
   modalOverlay: {

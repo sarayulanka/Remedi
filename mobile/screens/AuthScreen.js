@@ -24,13 +24,13 @@ const AuthScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
 
   const handleAuth = async () => {
-    if (!username || !password) {
-      Alert.alert('Required Fields', 'Please fill in all required fields');
+    if (isLogin && (!email || !password)) {
+      Alert.alert('Required Fields', 'Please enter your email and password');
       return;
     }
 
-    if (!isLogin && !email) {
-      Alert.alert('Email Required', 'Email is required for signup');
+    if (!isLogin && (!username || !email || !password)) {
+      Alert.alert('Required Fields', 'Please fill in all required fields');
       return;
     }
 
@@ -38,12 +38,13 @@ const AuthScreen = ({ navigation }) => {
 
     try {
       if (isLogin) {
-        // Login flow
-        const response = await authAPI.login(username, password);
+        // Login flow - uses email + password
+        const response = await authAPI.login(email, password);
 
-        // Save token
-        await AsyncStorage.setItem('authToken', response.access_token);
-        await AsyncStorage.setItem('userId', response.userId);
+        // Save token and user_id
+        await AsyncStorage.setItem('authToken', response.token);
+        await AsyncStorage.setItem('userId', response.user_id);
+        await AsyncStorage.setItem('userEmail', response.email);
         await AsyncStorage.setItem('username', response.username);
 
         // Navigate to main app - reset navigation to clear stack
@@ -63,7 +64,7 @@ const AuthScreen = ({ navigation }) => {
       console.error('Auth error:', error);
       Alert.alert(
         'Authentication Failed',
-        error.response?.data?.detail || 'Please check your credentials and try again'
+        error.response?.data?.error || 'Please check your credentials and try again'
       );
     } finally {
       setLoading(false);
@@ -136,32 +137,32 @@ const AuthScreen = ({ navigation }) => {
 
               {/* Input Fields */}
               <View style={styles.inputsContainer}>
-                <View style={styles.inputWrapper}>
-                  <Text style={styles.inputLabel}>Username</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter your username"
-                    value={username}
-                    onChangeText={setUsername}
-                    autoCapitalize="none"
-                    placeholderTextColor={colors.textMuted}
-                  />
-                </View>
-
                 {!isLogin && (
                   <View style={styles.inputWrapper}>
-                    <Text style={styles.inputLabel}>Email</Text>
+                    <Text style={styles.inputLabel}>Username</Text>
                     <TextInput
                       style={styles.input}
-                      placeholder="Enter your email"
-                      value={email}
-                      onChangeText={setEmail}
-                      keyboardType="email-address"
+                      placeholder="Enter your username"
+                      value={username}
+                      onChangeText={setUsername}
                       autoCapitalize="none"
                       placeholderTextColor={colors.textMuted}
                     />
                   </View>
                 )}
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.inputLabel}>Email</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter your email"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    placeholderTextColor={colors.textMuted}
+                  />
+                </View>
 
                 <View style={styles.inputWrapper}>
                   <Text style={styles.inputLabel}>Password</Text>

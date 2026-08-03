@@ -14,7 +14,7 @@ HEADERS = {
     'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS'
 }
 
-UPDATABLE_FIELDS = {'first_name', 'last_name', 'phone', 'username'}
+UPDATABLE_FIELDS = {'first_name', 'last_name', 'phone', 'username', 'nutrition_goals', 'food_allergies', 'diet_type'}
 
 
 def respond(status_code, body):
@@ -31,14 +31,12 @@ def lambda_handler(event, context):
         if event.get('httpMethod') == 'OPTIONS':
             return respond(200, {'message': 'OK'})
 
-        # Extract userid (email) from path parameters
+        # Extract user_id from path parameters
         path_params = event.get('pathParameters') or {}
-        userid = path_params.get('userid')
+        user_id = path_params.get('userid')
 
-        if not userid:
+        if not user_id:
             return respond(400, {'error': 'userid path parameter is required'})
-
-        email = userid.strip().lower()
 
         # Parse request body
         body = event.get('body')
@@ -49,8 +47,14 @@ def lambda_handler(event, context):
             body = json.loads(body)
 
         # Filter to only updatable fields that are present in the body
-        updates = {k: v.strip() if isinstance(v, str) else v
-                   for k, v in body.items() if k in UPDATABLE_FIELDS and v is not None}
+        updates = {}
+        for k, v in body.items():
+            if k not in UPDATABLE_FIELDS or v is None:
+                continue
+            if isinstance(v, str):
+                updates[k] = v.strip()
+            else:
+                updates[k] = v
 
         if not updates:
             return respond(400, {
@@ -59,10 +63,10 @@ def lambda_handler(event, context):
 
         # Verify the user exists
         existing = table.get_item(
-            Key={'email': email, 'record_type': 'PROFILE'}
+            Key={'user_id': user_id, 'record_type': 'PROFILE'}
         )
         if 'Item' not in existing:
-            return respond(404, {'error': f"User not found: {email}"})
+            return respond(404, {'error': f"User not found: {user_id}"})
 
         current_item = existing['Item']
 
@@ -102,7 +106,7 @@ def lambda_handler(event, context):
         # Perform the update
         response = table.update_item(
             Key={
-                'email': email,
+                'user_id': user_id,
                 'record_type': 'PROFILE'
             },
             UpdateExpression=update_expression,

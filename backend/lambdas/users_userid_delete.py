@@ -29,19 +29,17 @@ def lambda_handler(event, context):
         if event.get('httpMethod') == 'OPTIONS':
             return respond(200, {'message': 'OK'})
 
-        # Extract userid (email) from path parameters
+        # Extract user_id from path parameters
         path_params = event.get('pathParameters') or {}
-        userid = path_params.get('userid')
+        user_id = path_params.get('userid')
 
-        if not userid:
+        if not user_id:
             return respond(400, {'error': 'userid path parameter is required'})
 
-        email = userid.strip().lower()
-
-        # Query ALL items for this partition key (profile + all preferences)
+        # Query ALL items for this partition key (profile + all records)
         items_to_delete = []
         query_kwargs = {
-            'KeyConditionExpression': Key('email').eq(email)
+            'KeyConditionExpression': Key('user_id').eq(user_id)
         }
 
         while True:
@@ -55,7 +53,7 @@ def lambda_handler(event, context):
             query_kwargs['ExclusiveStartKey'] = last_key
 
         if not items_to_delete:
-            return respond(404, {'error': f"User not found: {email}"})
+            return respond(404, {'error': f"User not found: {user_id}"})
 
         # BatchWriteItem to delete all items for this user
         # DynamoDB BatchWriteItem supports max 25 items per batch
@@ -68,7 +66,7 @@ def lambda_handler(event, context):
                 {
                     'DeleteRequest': {
                         'Key': {
-                            'email': item['email'],
+                            'user_id': item['user_id'],
                             'record_type': item['record_type']
                         }
                     }
@@ -90,7 +88,7 @@ def lambda_handler(event, context):
             deleted_count += len(batch)
 
         return respond(200, {
-            'message': f"User '{email}' and all associated data deleted successfully",
+            'message': f"User '{user_id}' and all associated data deleted successfully",
             'items_deleted': deleted_count
         })
 

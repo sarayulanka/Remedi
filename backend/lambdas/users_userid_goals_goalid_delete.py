@@ -24,8 +24,8 @@ def respond(status_code, body):
 
 def lambda_handler(event, context):
     try:
-        # Extract userid (email) and goalid from path parameters
-        userid = event['pathParameters']['userid']
+        # Extract user_id and goalid from path parameters
+        user_id = event['pathParameters']['userid']
         goalid = event['pathParameters']['goalid']
 
         # Delete the item from DynamoDB
@@ -33,18 +33,18 @@ def lambda_handler(event, context):
         try:
             table.delete_item(
                 Key={
-                    'email': userid,
+                    'user_id': user_id,
                     'goal_id': goalid
                 },
-                ConditionExpression='attribute_exists(email) AND attribute_exists(goal_id)'
+                ConditionExpression='attribute_exists(user_id) AND attribute_exists(goal_id)'
             )
         except dynamodb.meta.client.exceptions.ConditionalCheckFailedException:
             return respond(404, {
-                'error': f'Goal {goalid} not found for user {userid}'
+                'error': f'Goal {goalid} not found for user {user_id}'
             })
 
         return respond(200, {
-            'message': f'Goal {goalid} successfully deleted for user {userid}'
+            'message': f'Goal {goalid} successfully deleted for user {user_id}'
         })
 
     except KeyError as e:
