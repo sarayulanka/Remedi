@@ -4,26 +4,26 @@ A comprehensive mobile nutrition assistant app built with React Native (Expo) an
 
 ## Features
 
-### 1. 🏠 Home Dashboard
+### 1. Home Dashboard
 - Daily check-in system with streak tracking
 - Badge display and achievements
 - Quick access to all features
 
-### 2. 📍 Location Finder
+### 2. Location Finder
 - Find nearby food banks, soup kitchens, and shelters
 - Filter by location type and dietary preferences
 - Integration with OpenStreetMap (Overpass API)
 - Save favorite locations
 - Get directions via Google Maps
 
-### 3. 🔍 Health Analysis
+### 3. Health Analysis
 - Take photos or describe health concerns
 - AI-powered analysis using OpenAI GPT-4 Vision
 - Natural food remedies backed by FDA FoodData Central database
 - Simple explanations of conditions
 - Save remedies for future reference
 
-### 4. 🏆 Goals & Gamification
+### 4. Goals & Gamification
 - Set nutrition goals with target days
 - Track progress with visual progress bars
 - Earn badges for achievements
